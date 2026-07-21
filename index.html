@@ -1942,51 +1942,49 @@ window.showToast=function(msg){
   setTimeout(()=>t.classList.remove('show'),2400);
 };
 
-// ---- SEED AC UNITS (runs once if no units exist) ----
-async function seedACUnitsIfEmpty(){
-  if(acItems.length > 0) return; // já tem unidades
+// ---- SEED AC UNITS ----
+window.seedACUnitsIfEmpty = async function(){
+  if(acItems.length > 0){ showToast('Catálogo já tem '+acItems.length+' unidades'); return; }
   const units = [
-    // TOYOTOMI SORA+
     {brand:"Toyotomi",model:"TSN/TSG-09R32 SORA+",btu:"9000",type:"Mono Split",coolKw:2.60,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:537,discount:40,buyPrice:322.20,margin:25,sellPrice:429.60,features:"Inverter, R32, SORA+"},
     {brand:"Toyotomi",model:"TSN/TSG-12R32 PLUS SORA+",btu:"12000",type:"Mono Split",coolKw:3.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:574,discount:40,buyPrice:344.40,margin:25,sellPrice:459.20,features:"Inverter, R32, SORA+"},
     {brand:"Toyotomi",model:"TSN/TSG-18R32 PLUS SORA+",btu:"18000",type:"Mono Split",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:927,discount:40,buyPrice:556.20,margin:25,sellPrice:741.60,features:"Inverter, R32, SORA+"},
     {brand:"Toyotomi",model:"TSN/TSG-24R32 PLUS SORA+",btu:"24000",type:"Mono Split",coolKw:7.00,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1180,discount:40,buyPrice:708.00,margin:25,sellPrice:944.00,features:"Inverter, R32, SORA+"},
-    // TOYOTOMI UMI
     {brand:"Toyotomi",model:"UTN/UTG-09CH UMI",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:608,discount:40,buyPrice:364.80,margin:25,sellPrice:486.40,features:"Inverter, R32, UMI, A+++"},
     {brand:"Toyotomi",model:"UTN/UTG-12CH UMI",btu:"12000",type:"Mono Split",coolKw:3.20,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:649,discount:40,buyPrice:389.40,margin:25,sellPrice:519.20,features:"Inverter, R32, UMI, A+++"},
     {brand:"Toyotomi",model:"UTN/UTG-18CH UMI",btu:"18000",type:"Mono Split",coolKw:5.30,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1048,discount:40,buyPrice:628.80,margin:25,sellPrice:838.40,features:"Inverter, R32, UMI, A+++"},
     {brand:"Toyotomi",model:"UTN/UTG-24CH UMI",btu:"24000",type:"Mono Split",coolKw:7.10,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1313,discount:40,buyPrice:787.80,margin:25,sellPrice:1050.40,features:"Inverter, R32, UMI, A+++"},
-    // TOYOTOMI ERAI
     {brand:"Toyotomi",model:"CTN/CTG-328W Erai",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:820,discount:40,buyPrice:492.00,margin:25,sellPrice:656.00,features:"Inverter, R32, Erai, Wi-Fi"},
     {brand:"Toyotomi",model:"CTN/CTG-335W Erai",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:870,discount:40,buyPrice:522.00,margin:25,sellPrice:696.00,features:"Inverter, R32, Erai, Wi-Fi"},
     {brand:"Toyotomi",model:"CTN/CTG-356W Erai",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1315,discount:40,buyPrice:789.00,margin:25,sellPrice:1052.00,features:"Inverter, R32, Erai, Wi-Fi"},
     {brand:"Toyotomi",model:"CTN/CTG-371W Erai",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1599,discount:40,buyPrice:959.40,margin:25,sellPrice:1279.20,features:"Inverter, R32, Erai, Wi-Fi"},
-    // TOYOTOMI ERAI BLACK
     {brand:"Toyotomi",model:"CTN/CTG-328BV Erai Black",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:850,discount:40,buyPrice:510.00,margin:25,sellPrice:680.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
     {brand:"Toyotomi",model:"CTN/CTG-335BV Erai Black",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:900,discount:40,buyPrice:540.00,margin:25,sellPrice:720.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
     {brand:"Toyotomi",model:"CTN/CTG-356BV Erai Black",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1350,discount:40,buyPrice:810.00,margin:25,sellPrice:1080.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
     {brand:"Toyotomi",model:"CTN/CTG-371BV Erai Black",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1650,discount:40,buyPrice:990.00,margin:25,sellPrice:1320.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
-    // TOYOTOMI YUKI+
     {brand:"Toyotomi",model:"TYN/TYG-09R32 PLUS YUKI+",btu:"9000",type:"Mono Split",coolKw:2.61,heatBtu:8906,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:729,discount:40,buyPrice:437.40,margin:25,sellPrice:583.20,features:"Inverter, R32, YUKI+"},
     {brand:"Toyotomi",model:"TYN/TYG-12R32 PLUS YUKI+",btu:"12000",type:"Mono Split",coolKw:3.52,heatBtu:12011,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:799,discount:40,buyPrice:479.40,margin:25,sellPrice:639.20,features:"Inverter, R32, YUKI+"},
     {brand:"Toyotomi",model:"TYN/TYG-18R32 PLUS YUKI+",btu:"18000",type:"Mono Split",coolKw:5.20,heatBtu:17743,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1229,discount:40,buyPrice:737.40,margin:25,sellPrice:983.20,features:"Inverter, R32, YUKI+"},
     {brand:"Toyotomi",model:"TYN/TYG-24R32 PLUS YUKI+",btu:"24000",type:"Mono Split",coolKw:7.00,heatBtu:23885,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1540,discount:40,buyPrice:924.00,margin:25,sellPrice:1232.00,features:"Inverter, R32, YUKI+"},
-    // TOYOTOMI CONSOLA
     {brand:"Toyotomi",model:"CON28IN/OU24R32 Consola",btu:"9000",type:"Cassete",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1038,discount:40,buyPrice:622.80,margin:25,sellPrice:830.40,features:"Inverter, R32, Consola, Monofase"},
     {brand:"Toyotomi",model:"CON36IN/OU24R32 Consola",btu:"12000",type:"Cassete",coolKw:3.52,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1113,discount:40,buyPrice:667.80,margin:25,sellPrice:890.40,features:"Inverter, R32, Consola, Monofase"},
     {brand:"Toyotomi",model:"CON56IN/OU24R32 Consola",btu:"18000",type:"Cassete",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1360,discount:40,buyPrice:816.00,margin:25,sellPrice:1088.00,features:"Inverter, R32, Consola, Monofase"},
-    // MIDEA COMFEE (preço já é de compra com desconto incluído)
     {brand:"Midea Comfee",model:"MSAFAU-09HRDN8",btu:"9000",type:"Mono Split",coolKw:2.64,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:265.00,margin:25,sellPrice:353.33,features:"Inverter, R32"},
     {brand:"Midea Comfee",model:"MSAFAU-12HRDN8",btu:"12000",type:"Mono Split",coolKw:3.52,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:295.00,margin:25,sellPrice:393.33,features:"Inverter, R32"},
     {brand:"Midea Comfee",model:"MSAFAU-18HRDN8",btu:"18000",type:"Mono Split",coolKw:5.27,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:473.00,margin:25,sellPrice:630.67,features:"Inverter, R32"},
     {brand:"Midea Comfee",model:"MSAFAU-24HRDN8",btu:"24000",type:"Mono Split",coolKw:7.03,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:576.00,margin:25,sellPrice:768.00,features:"Inverter, R32"},
   ];
-  showToast('A adicionar catálogo AC...');
+  showToast('A adicionar ' + units.length + ' unidades...');
+  let count = 0;
   for(const u of units){
-    await addDoc(collection(db,'ep_ac'),{...u,energyClass:u.classCool,createdAt:serverTimestamp()});
+    try{
+      await addDoc(collection(db,'ep_ac'),{...u,energyClass:u.classCool,createdAt:serverTimestamp()});
+      count++;
+    }catch(e){ console.error('Erro a adicionar',u.model,e); }
   }
-  showToast(`${units.length} unidades AC adicionadas ✓`);
-}
+  showToast(count + ' unidades AC adicionadas ✓');
+};
+
 </script>
 </body>
 </html>

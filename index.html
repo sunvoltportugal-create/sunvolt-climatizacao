@@ -308,6 +308,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       </div>
       <div style="font-size:12px;color:var(--text2);font-weight:500">Bruno Sequeira · TRIESP</div>
       <button onclick="switchMode()" style="margin-top:12px;width:100%;height:30px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer">⇄ Mudar modo</button>
+      <button onclick="seedACUnitsIfEmpty()" style="margin-top:6px;width:100%;height:30px;border-radius:6px;border:1px solid var(--green);background:transparent;color:var(--green);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer">+ Importar catálogo AC</button>
     </div>
   </div>
 
@@ -454,55 +455,144 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     <div class="modal-title" id="acModalTitle">Nova unidade AC</div>
     <div class="modal-sub">Catálogo de unidades de ar condicionado</div>
     <input type="hidden" id="acEditId"/>
+
     <div class="field-row">
       <div>
         <label class="field-label">Marca</label>
-        <input class="field-input" id="acBrand" placeholder="Ex: Daikin"/>
+        <input class="field-input" id="acBrand" placeholder="Ex: Toyotomi"/>
       </div>
       <div>
         <label class="field-label">Modelo</label>
-        <input class="field-input" id="acModel" placeholder="Ex: FTXC25D"/>
+        <input class="field-input" id="acModel" placeholder="Ex: TSN/TSG-09R32"/>
       </div>
     </div>
+
     <div class="field-row">
-      <div>
-        <label class="field-label">BTU</label>
-        <select class="field-select" id="acBtu">
-          <option>9000</option><option>12000</option><option>18000</option><option>24000</option><option>36000</option>
-        </select>
-      </div>
       <div>
         <label class="field-label">Tipo</label>
         <select class="field-select" id="acType">
           <option>Mono Split</option><option>Multi Split</option><option>Cassete</option><option>Ducted</option><option>Portátil</option>
         </select>
       </div>
-    </div>
-    <div class="field-row">
       <div>
-        <label class="field-label">Classe energética</label>
-        <select class="field-select" id="acClass">
-          <option>A+++</option><option>A++</option><option>A+</option><option>A</option><option>B</option>
+        <label class="field-label">BTU nominal</label>
+        <select class="field-select" id="acBtu">
+          <option>9000</option><option>12000</option><option>18000</option><option>24000</option><option>36000</option>
         </select>
       </div>
-      <div>
-        <label class="field-label">kW (frio)</label>
-        <input class="field-input" id="acKw" type="number" step="0.1" placeholder="2.5"/>
+    </div>
+
+    <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;margin-top:14px;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--accent);margin-bottom:10px">❄️ Capacidade de arrefecimento</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Arrefecimento (kW)</label>
+          <input class="field-input" id="acCoolKw" type="number" step="0.01" placeholder="Ex: 2.6" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Classe energética frio</label>
+          <select class="field-select" id="acClassCool" style="background:var(--bg)">
+            <option>A+++</option><option>A++</option><option>A+</option><option>A</option><option>B</option><option>C</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">SEER</label>
+          <input class="field-input" id="acSeer" type="number" step="0.1" placeholder="Ex: 8.5" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Potência absorvida frio (kW)</label>
+          <input class="field-input" id="acCoolInput" type="number" step="0.01" placeholder="Ex: 0.77" style="background:var(--bg)"/>
+        </div>
       </div>
     </div>
-    <label class="field-label">Características extra</label>
-    <input class="field-input" id="acFeatures" placeholder="Ex: Wi-Fi, Inverter, R32, Self-clean"/>
-    <div class="field-row">
-      <div>
-        <label class="field-label">Preço de compra (€)</label>
-        <input class="field-input" id="acBuyPrice" type="number" step="0.01" placeholder="0.00"/>
+
+    <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;margin-top:10px;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--amber);margin-bottom:10px">🔥 Capacidade de aquecimento</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Aquecimento (BTU/h)</label>
+          <input class="field-input" id="acHeatBtu" type="number" step="1" placeholder="Ex: 10200" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Aquecimento (kW)</label>
+          <input class="field-input" id="acHeatKw" type="number" step="0.01" placeholder="Ex: 2.99" style="background:var(--bg)" oninput="calcHeatBtu()"/>
+        </div>
       </div>
-      <div>
-        <label class="field-label">Preço de venda (€)</label>
-        <input class="field-input" id="acSellPrice" type="number" step="0.01" placeholder="0.00"/>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Classe energética quente</label>
+          <select class="field-select" id="acClassHeat" style="background:var(--bg)">
+            <option>A+++</option><option>A++</option><option>A+</option><option>A</option><option>B</option><option>C</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">SCOP</label>
+          <input class="field-input" id="acScop" type="number" step="0.1" placeholder="Ex: 4.6" style="background:var(--bg)"/>
+        </div>
       </div>
     </div>
-    <label class="field-label">Notas / Observações</label>
+
+    <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;margin-top:10px;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);margin-bottom:10px">🔧 Tubagem</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Ø cobre líquido (mm)</label>
+          <input class="field-input" id="acPipeLiq" placeholder="Ex: 6.35" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Ø cobre gás (mm)</label>
+          <input class="field-input" id="acPipeGas" placeholder="Ex: 9.52" style="background:var(--bg)"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Ø condensados (mm)</label>
+          <input class="field-input" id="acPipeDrain" placeholder="Ex: 16" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Gás refrigerante</label>
+          <select class="field-select" id="acGasType" style="background:var(--bg)">
+            <option>R32</option><option>R410A</option><option>R290</option><option>R22</option><option>R454B</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <label class="field-label" style="margin-top:14px">Características extra</label>
+    <input class="field-input" id="acFeatures" placeholder="Ex: Wi-Fi, Inverter, Self-clean, ionizador"/>
+
+    <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;margin-top:14px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--green);margin-bottom:10px">💶 Preços</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Preço de tabela (€)</label>
+          <input class="field-input" id="acListPrice" type="number" step="0.01" placeholder="0.00" oninput="calcAcPrice()" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Desconto compra (%)</label>
+          <input class="field-input" id="acDiscount" type="number" step="0.1" placeholder="Ex: 30" oninput="calcAcPrice()" style="background:var(--bg)"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Preço de compra (€)</label>
+          <input class="field-input" id="acBuyPrice" type="number" step="0.01" placeholder="0.00" oninput="calcAcSell()" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Margem de lucro (%)</label>
+          <input class="field-input" id="acMargin" type="number" step="0.1" placeholder="Ex: 25" oninput="calcAcSell()" style="background:var(--bg)"/>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text2)">Preço de venda ao cliente</span>
+        <span style="font-size:18px;font-weight:700;color:var(--green)" id="acSellPriceDisplay">0.00 €</span>
+      </div>
+      <input type="hidden" id="acSellPrice"/>
+    </div>
+
+    <label class="field-label" style="margin-top:14px">Notas / Observações</label>
     <input class="field-input" id="acNotes" placeholder="Opcional"/>
     <div class="modal-actions">
       <button class="modal-btn cancel" onclick="closeModal('acModal')">Cancelar</button>
@@ -562,28 +652,47 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     </div>
 
     <div class="orc-section">
-      <div class="orc-sec-title">Unidade AC</div>
+      <div class="orc-sec-title">Unidade AC selecionada</div>
       <select class="field-select" id="orcAcSelect" onchange="updateOrcAcPrice()">
-        <option value="">— Selecionar unidade —</option>
+        <option value="">— Selecionar unidade (opcional) —</option>
       </select>
       <div id="orcAcInfo" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+      <div id="orcConsultRow" style="display:none;margin-top:10px;background:var(--accent-light);border-radius:var(--radius-sm);padding:10px;border:1px solid rgba(61,142,240,.2)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">Taxa de serviço/consultoria</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Margem sobre a unidade AC (entra no recibo verde)</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="orcConsultVal">0.00 €</div>
+            <div style="font-size:10px;color:var(--text3)" id="orcConsultPct"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="orc-section">
       <div class="orc-sec-title">Material do stock</div>
       <div id="orcStockItems"></div>
-      <button onclick="addOrcStockLine()" style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">+ Adicionar material</button>
+      <button onclick="addOrcStockLine()" style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">+ Adicionar material do stock</button>
     </div>
 
     <div class="orc-section">
-      <div class="orc-sec-title">Mão de obra & Deslocação</div>
+      <div class="orc-sec-title">Mão de obra & Outros</div>
       <div class="orc-item-row">
-        <span class="orc-item-name">Mão de obra</span>
+        <span class="orc-item-name">Mão de obra / Instalação</span>
         <input class="orc-item-qty" type="number" step="0.01" id="orcLabour" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
       </div>
       <div class="orc-item-row">
         <span class="orc-item-name">Deslocação</span>
         <input class="orc-item-qty" type="number" step="0.01" id="orcTravel" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
+      </div>
+      <div class="orc-item-row">
+        <span class="orc-item-name" style="display:flex;flex-direction:column">
+          Consumíveis
+          <span style="font-size:10px;color:var(--text3)">parafusos, colas, vedas, espumas...</span>
+        </span>
+        <input class="orc-item-qty" type="number" step="0.01" id="orcConsumables" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
       </div>
     </div>
 
@@ -835,6 +944,8 @@ let stockItems=[], acItems=[], orcamentos=[];
 let stockCatFilter='all', acBrandFilter='all';
 let orcStockLines=[];
 let currentOrcAcPrice=0;
+let currentOrcConsultValue=0;
+let currentOrcAcMargin=0;
 
 // MODE SELECTOR
 let currentMode = localStorage.getItem('ep_mode') || null;
@@ -1131,7 +1242,29 @@ function renderStock(){
 
 window.setStockFilter=function(val){stockCatFilter=val;renderStock();};
 
-// ---- AC ----
+// ---- AC PRICE CALC ----
+window.calcAcPrice = function(){
+  const list = parseFloat(document.getElementById('acListPrice').value)||0;
+  const disc = parseFloat(document.getElementById('acDiscount').value)||0;
+  const buy = list * (1 - disc/100);
+  if(buy > 0){
+    document.getElementById('acBuyPrice').value = buy.toFixed(2);
+    calcAcSell();
+  }
+};
+
+window.calcAcSell = function(){
+  const buy = parseFloat(document.getElementById('acBuyPrice').value)||0;
+  const margin = parseFloat(document.getElementById('acMargin').value)||0;
+  const sell = margin > 0 ? buy / (1 - margin/100) : buy;
+  document.getElementById('acSellPrice').value = sell.toFixed(2);
+  document.getElementById('acSellPriceDisplay').textContent = sell.toFixed(2)+' €';
+};
+
+window.calcHeatBtu = function(){
+  const kw = parseFloat(document.getElementById('acHeatKw').value)||0;
+  if(kw > 0) document.getElementById('acHeatBtu').value = Math.round(kw * 3412);
+};
 window.saveAC=async function(){
   const id=document.getElementById('acEditId').value;
   const data={
@@ -1139,10 +1272,24 @@ window.saveAC=async function(){
     model:document.getElementById('acModel').value.trim(),
     btu:document.getElementById('acBtu').value,
     type:document.getElementById('acType').value,
-    energyClass:document.getElementById('acClass').value,
-    kw:parseFloat(document.getElementById('acKw').value)||0,
+    coolKw:parseFloat(document.getElementById('acCoolKw').value)||0,
+    energyClass:document.getElementById('acClassCool').value,
+    classCool:document.getElementById('acClassCool').value,
+    classHeat:document.getElementById('acClassHeat').value,
+    seer:parseFloat(document.getElementById('acSeer').value)||0,
+    scop:parseFloat(document.getElementById('acScop').value)||0,
+    coolInput:parseFloat(document.getElementById('acCoolInput').value)||0,
+    heatBtu:parseFloat(document.getElementById('acHeatBtu').value)||0,
+    heatKw:parseFloat(document.getElementById('acHeatKw').value)||0,
+    pipeLiq:document.getElementById('acPipeLiq').value.trim(),
+    pipeGas:document.getElementById('acPipeGas').value.trim(),
+    pipeDrain:document.getElementById('acPipeDrain').value.trim(),
+    gasType:document.getElementById('acGasType').value,
     features:document.getElementById('acFeatures').value.trim(),
+    listPrice:parseFloat(document.getElementById('acListPrice').value)||0,
+    discount:parseFloat(document.getElementById('acDiscount').value)||0,
     buyPrice:parseFloat(document.getElementById('acBuyPrice').value)||0,
+    margin:parseFloat(document.getElementById('acMargin').value)||0,
     sellPrice:parseFloat(document.getElementById('acSellPrice').value)||0,
     notes:document.getElementById('acNotes').value.trim(),
   };
@@ -1153,7 +1300,11 @@ window.saveAC=async function(){
 };
 
 function clearACForm(){
-  ['acEditId','acBrand','acModel','acKw','acFeatures','acBuyPrice','acSellPrice','acNotes'].forEach(id=>document.getElementById(id).value='');
+  ['acEditId','acBrand','acModel','acCoolKw','acSeer','acCoolInput','acHeatBtu','acHeatKw','acScop',
+   'acPipeLiq','acPipeGas','acPipeDrain','acFeatures','acListPrice','acDiscount','acBuyPrice','acMargin','acSellPrice','acNotes'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('acSellPriceDisplay').textContent='0.00 €';
   document.getElementById('acModalTitle').textContent='Nova unidade AC';
 }
 
@@ -1164,11 +1315,25 @@ window.editAC=function(id){
   document.getElementById('acModel').value=a.model||'';
   document.getElementById('acBtu').value=a.btu||'9000';
   document.getElementById('acType').value=a.type||'Mono Split';
-  document.getElementById('acClass').value=a.energyClass||'A++';
-  document.getElementById('acKw').value=a.kw||'';
+  document.getElementById('acCoolKw').value=a.coolKw||a.kw||'';
+  document.getElementById('acClassCool').value=a.classCool||a.energyClass||'A+++';
+  document.getElementById('acClassHeat').value=a.classHeat||a.energyClass||'A+++';
+  document.getElementById('acSeer').value=a.seer||'';
+  document.getElementById('acScop').value=a.scop||'';
+  document.getElementById('acCoolInput').value=a.coolInput||'';
+  document.getElementById('acHeatBtu').value=a.heatBtu||'';
+  document.getElementById('acHeatKw').value=a.heatKw||'';
+  document.getElementById('acPipeLiq').value=a.pipeLiq||'';
+  document.getElementById('acPipeGas').value=a.pipeGas||'';
+  document.getElementById('acPipeDrain').value=a.pipeDrain||'';
+  document.getElementById('acGasType').value=a.gasType||'R32';
   document.getElementById('acFeatures').value=a.features||'';
+  document.getElementById('acListPrice').value=a.listPrice||'';
+  document.getElementById('acDiscount').value=a.discount||'';
   document.getElementById('acBuyPrice').value=a.buyPrice||'';
+  document.getElementById('acMargin').value=a.margin||'';
   document.getElementById('acSellPrice').value=a.sellPrice||'';
+  document.getElementById('acSellPriceDisplay').textContent=(a.sellPrice||0).toFixed(2)+' €';
   document.getElementById('acNotes').value=a.notes||'';
   document.getElementById('acModalTitle').textContent='Editar unidade';
   openModal('acModal');
@@ -1214,12 +1379,20 @@ function renderAC(){
       </div>
       <div class="ac-specs">
         <span class="spec-pill">${a.btu} BTU</span>
-        <span class="spec-pill">${a.kw?a.kw+' kW':''}</span>
         <span class="spec-pill">${a.type}</span>
-        <span class="spec-pill">Classe ${a.energyClass}</span>
+        ${a.coolKw?`<span class="spec-pill">❄️ ${a.coolKw} kW</span>`:''}
+        ${a.heatKw?`<span class="spec-pill">🔥 ${a.heatKw} kW</span>`:''}
+        ${a.heatBtu?`<span class="spec-pill">🔥 ${a.heatBtu.toLocaleString()} BTU/h</span>`:''}
+        ${a.classCool?`<span class="spec-pill">Frio ${a.classCool}</span>`:a.energyClass?`<span class="spec-pill">Classe ${a.energyClass}</span>`:''}
+        ${a.classHeat?`<span class="spec-pill">Quente ${a.classHeat}</span>`:''}
+        ${a.seer?`<span class="spec-pill">SEER ${a.seer}</span>`:''}
+        ${a.scop?`<span class="spec-pill">SCOP ${a.scop}</span>`:''}
+        ${a.gasType?`<span class="spec-pill">${a.gasType}</span>`:''}
+        ${a.pipeLiq||a.pipeGas?`<span class="spec-pill">Ø ${[a.pipeLiq,a.pipeGas].filter(Boolean).join('/')} mm</span>`:''}
         ${(a.features||'').split(',').filter(f=>f.trim()).map(f=>`<span class="spec-pill">${esc(f.trim())}</span>`).join('')}
       </div>
       <div class="ac-prices">
+        ${a.listPrice?`<div class="ac-price-item"><div class="ac-price-label">Tabela</div><div class="ac-price-val" style="font-size:12px;color:var(--text3)">${a.listPrice.toFixed(2)} €</div></div>`:''}
         <div class="ac-price-item"><div class="ac-price-label">Compra</div><div class="ac-price-val">${a.buyPrice?a.buyPrice.toFixed(2)+' €':'—'}</div></div>
         <div class="ac-price-item"><div class="ac-price-label">Venda</div><div class="ac-price-val">${a.sellPrice?a.sellPrice.toFixed(2)+' €':'—'}</div></div>
         ${margin?`<div class="ac-price-item"><div class="ac-price-label">Margem</div><div class="ac-price-val green">${margin}%</div></div>`:''}
@@ -1285,10 +1458,13 @@ window.openOrcBuilder=function(){
 };
 
 function clearOrcForm(){
-  ['orcClient','orcAddress','orcNotes','orcLabour','orcTravel','orcGasPrice','orcTubeLength'].forEach(id=>document.getElementById(id).value='');
+  ['orcClient','orcAddress','orcNotes','orcLabour','orcTravel','orcGasPrice','orcTubeLength','orcConsumables'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   currentOrcAcPrice=0;
+  currentOrcConsultValue=0;
+  currentOrcAcMargin=0;
   currentInstType='completa';
   document.getElementById('orcAcInfo').innerHTML='';
+  document.getElementById('orcConsultRow').style.display='none';
   document.getElementById('orcAddGas').checked=false;
   document.getElementById('orcGasPrice').style.display='none';
   document.getElementById('instTypeCompleta').classList.add('active');
@@ -1299,9 +1475,21 @@ window.updateOrcAcPrice=function(){
   const id=document.getElementById('orcAcSelect').value;
   const a=acItems.find(x=>x.id===id);
   if(a){
-    currentOrcAcPrice=a.sellPrice||0;
-    document.getElementById('orcAcInfo').innerHTML=`<span style="color:var(--accent);font-weight:600">${a.sellPrice?a.sellPrice.toFixed(2)+' €':'s/preço'}</span> · ${a.btu} BTU · Classe ${a.energyClass}`;
-  }else{currentOrcAcPrice=0;document.getElementById('orcAcInfo').innerHTML='';}
+    currentOrcAcPrice=a.buyPrice||0;
+    const consultVal = (a.sellPrice||0)-(a.buyPrice||0);
+    currentOrcConsultValue = consultVal > 0 ? consultVal : 0;
+    currentOrcAcMargin = a.margin||0;
+    document.getElementById('orcAcInfo').innerHTML=
+      `<span style="color:var(--text2);font-size:11px">${a.brand} ${a.model} · ${a.btu} BTU · ${a.classCool||a.energyClass||''}</span><br/>` +
+      `<span style="color:var(--text3);font-size:11px">Preço compra: ${(a.buyPrice||0).toFixed(2)} € · PVP tabela: ${(a.listPrice||0).toFixed(2)} €</span>`;
+    document.getElementById('orcConsultRow').style.display='block';
+    document.getElementById('orcConsultVal').textContent=currentOrcConsultValue.toFixed(2)+' €';
+    document.getElementById('orcConsultPct').textContent='Margem '+currentOrcAcMargin+'% sobre preço de compra';
+  }else{
+    currentOrcAcPrice=0;currentOrcConsultValue=0;currentOrcAcMargin=0;
+    document.getElementById('orcAcInfo').innerHTML='';
+    document.getElementById('orcConsultRow').style.display='none';
+  }
   calcOrcTotal();
 };
 
@@ -1344,13 +1532,15 @@ window.removeOrcLine=function(i){
 window.calcOrcTotal=function(){
   const labour=parseFloat(document.getElementById('orcLabour').value)||0;
   const travel=parseFloat(document.getElementById('orcTravel').value)||0;
+  const consumables=parseFloat(document.getElementById('orcConsumables').value)||0;
   const gasAdded=document.getElementById('orcAddGas').checked;
   const gas=gasAdded?parseFloat(document.getElementById('orcGasPrice').value)||0:0;
   const stockTotal=orcStockLines.reduce((acc,l)=>{
     const s=stockItems.find(x=>x.id===l.stockId);
     return acc+(s&&s.sellPrice?s.sellPrice*l.qty:0);
   },0);
-  const subtotal=currentOrcAcPrice+stockTotal+labour+travel+gas;
+  // Subtotal = consultancy fee + stock + labour + travel + consumables + gas
+  const subtotal=currentOrcConsultValue+stockTotal+labour+travel+consumables+gas;
   const iva=subtotal*0.23;
   const total=subtotal+iva;
   document.getElementById('orcSubtotal').textContent=subtotal.toFixed(2)+' €';
@@ -1373,8 +1563,9 @@ window.saveOrc=async function(){
     return s?{name:s.name,qty:l.qty,unit:s.unit||'un',price:s.sellPrice||0,total:(s.sellPrice||0)*l.qty}:null;
   }).filter(Boolean);
   const stockTotal=stockLines.reduce((a,l)=>a+l.total,0);
-  const acPrice=acUnit?acUnit.sellPrice||0:0;
-  const subtotal=acPrice+stockTotal+labour+travel+gasPrice;
+  const consultVal=acUnit?(acUnit.sellPrice||0)-(acUnit.buyPrice||0):0;
+  const consumables=parseFloat(document.getElementById('orcConsumables').value)||0;
+  const subtotal=consultVal+stockTotal+labour+travel+gasPrice+consumables;
   const iva=subtotal*0.23;
   const total=subtotal+iva;
   const services=currentInstType==='completa'?SERVICES_COMPLETA:SERVICES_SIMPLES;
@@ -1386,7 +1577,9 @@ window.saveOrc=async function(){
     services,
     tubeLength,
     gasAdded,gasPrice,
-    acUnit:acUnit?{brand:acUnit.brand,model:acUnit.model,btu:acUnit.btu,type:acUnit.type,energyClass:acUnit.energyClass,price:acPrice}:null,
+    consumables,
+    consultVal,
+    acUnit:acUnit?{brand:acUnit.brand,model:acUnit.model,btu:acUnit.btu,type:acUnit.type,energyClass:acUnit.energyClass,buyPrice:acUnit.buyPrice||0,sellPrice:acUnit.sellPrice||0,listPrice:acUnit.listPrice||0,margin:acUnit.margin||0}:null,
     stockLines,labour,travel,subtotal,iva,total,
     date:new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'}),
     createdAt:serverTimestamp()
@@ -1641,10 +1834,14 @@ window.showPdf=function(id){
   document.getElementById('pdfModalTitle').textContent='Orçamento';
   document.getElementById('shareButtons').style.display='flex';
   const rows=[
-    ...(o.acUnit?[`<tr><td>${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · Classe ${o.acUnit.energyClass||''}</td><td>1</td><td>un</td><td>${(o.acUnit.price||0).toFixed(2)} €</td></tr>`]:[]),
+    // Nota sobre máquina (não entra no valor — fatura direta ao cliente)
+    ...(o.acUnit?[`<tr style="background:#f8f9fa"><td colspan="3" style="font-style:italic;color:#888;font-size:11px">ℹ️ Unidade AC: ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · Fatura emitida diretamente pelo fornecedor ao cliente</td><td style="color:#888;font-size:11px">—</td></tr>`]:[]),
+    // Taxa de serviço/consultoria (margem)
+    ...(o.consultVal?[`<tr><td><strong>Taxa de serviço/consultoria</strong><br/><span style="font-size:10px;color:#888">Seleção, coordenação e acompanhamento técnico da unidade AC</span></td><td>1</td><td>vg</td><td>${(o.consultVal).toFixed(2)} €</td></tr>`]:[]),
     ...(o.stockLines||[]).map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${l.unit}</td><td>${l.total.toFixed(2)} €</td></tr>`),
     o.labour?`<tr><td>Mão de obra / Instalação</td><td>1</td><td>vg</td><td>${o.labour.toFixed(2)} €</td></tr>`:'',
     o.travel?`<tr><td>Deslocação</td><td>1</td><td>vg</td><td>${o.travel.toFixed(2)} €</td></tr>`:'',
+    o.consumables?`<tr><td>Consumíveis<br/><span style="font-size:10px;color:#888">parafusos, colas, vedas, espumas, fixações</span></td><td>1</td><td>vg</td><td>${o.consumables.toFixed(2)} €</td></tr>`:'',
     o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás adicional (tubagem &gt; 5m)</td><td>1</td><td>vg</td><td>${o.gasPrice.toFixed(2)} €</td></tr>`:'',
   ].filter(Boolean).join('');
 
@@ -1744,6 +1941,52 @@ window.showToast=function(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2400);
 };
+
+// ---- SEED AC UNITS (runs once if no units exist) ----
+async function seedACUnitsIfEmpty(){
+  if(acItems.length > 0) return; // já tem unidades
+  const units = [
+    // TOYOTOMI SORA+
+    {brand:"Toyotomi",model:"TSN/TSG-09R32 SORA+",btu:"9000",type:"Mono Split",coolKw:2.60,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:537,discount:40,buyPrice:322.20,margin:25,sellPrice:429.60,features:"Inverter, R32, SORA+"},
+    {brand:"Toyotomi",model:"TSN/TSG-12R32 PLUS SORA+",btu:"12000",type:"Mono Split",coolKw:3.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:574,discount:40,buyPrice:344.40,margin:25,sellPrice:459.20,features:"Inverter, R32, SORA+"},
+    {brand:"Toyotomi",model:"TSN/TSG-18R32 PLUS SORA+",btu:"18000",type:"Mono Split",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:927,discount:40,buyPrice:556.20,margin:25,sellPrice:741.60,features:"Inverter, R32, SORA+"},
+    {brand:"Toyotomi",model:"TSN/TSG-24R32 PLUS SORA+",btu:"24000",type:"Mono Split",coolKw:7.00,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1180,discount:40,buyPrice:708.00,margin:25,sellPrice:944.00,features:"Inverter, R32, SORA+"},
+    // TOYOTOMI UMI
+    {brand:"Toyotomi",model:"UTN/UTG-09CH UMI",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:608,discount:40,buyPrice:364.80,margin:25,sellPrice:486.40,features:"Inverter, R32, UMI, A+++"},
+    {brand:"Toyotomi",model:"UTN/UTG-12CH UMI",btu:"12000",type:"Mono Split",coolKw:3.20,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:649,discount:40,buyPrice:389.40,margin:25,sellPrice:519.20,features:"Inverter, R32, UMI, A+++"},
+    {brand:"Toyotomi",model:"UTN/UTG-18CH UMI",btu:"18000",type:"Mono Split",coolKw:5.30,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1048,discount:40,buyPrice:628.80,margin:25,sellPrice:838.40,features:"Inverter, R32, UMI, A+++"},
+    {brand:"Toyotomi",model:"UTN/UTG-24CH UMI",btu:"24000",type:"Mono Split",coolKw:7.10,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1313,discount:40,buyPrice:787.80,margin:25,sellPrice:1050.40,features:"Inverter, R32, UMI, A+++"},
+    // TOYOTOMI ERAI
+    {brand:"Toyotomi",model:"CTN/CTG-328W Erai",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:820,discount:40,buyPrice:492.00,margin:25,sellPrice:656.00,features:"Inverter, R32, Erai, Wi-Fi"},
+    {brand:"Toyotomi",model:"CTN/CTG-335W Erai",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:870,discount:40,buyPrice:522.00,margin:25,sellPrice:696.00,features:"Inverter, R32, Erai, Wi-Fi"},
+    {brand:"Toyotomi",model:"CTN/CTG-356W Erai",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1315,discount:40,buyPrice:789.00,margin:25,sellPrice:1052.00,features:"Inverter, R32, Erai, Wi-Fi"},
+    {brand:"Toyotomi",model:"CTN/CTG-371W Erai",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1599,discount:40,buyPrice:959.40,margin:25,sellPrice:1279.20,features:"Inverter, R32, Erai, Wi-Fi"},
+    // TOYOTOMI ERAI BLACK
+    {brand:"Toyotomi",model:"CTN/CTG-328BV Erai Black",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:850,discount:40,buyPrice:510.00,margin:25,sellPrice:680.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    {brand:"Toyotomi",model:"CTN/CTG-335BV Erai Black",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:900,discount:40,buyPrice:540.00,margin:25,sellPrice:720.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    {brand:"Toyotomi",model:"CTN/CTG-356BV Erai Black",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1350,discount:40,buyPrice:810.00,margin:25,sellPrice:1080.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    {brand:"Toyotomi",model:"CTN/CTG-371BV Erai Black",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1650,discount:40,buyPrice:990.00,margin:25,sellPrice:1320.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    // TOYOTOMI YUKI+
+    {brand:"Toyotomi",model:"TYN/TYG-09R32 PLUS YUKI+",btu:"9000",type:"Mono Split",coolKw:2.61,heatBtu:8906,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:729,discount:40,buyPrice:437.40,margin:25,sellPrice:583.20,features:"Inverter, R32, YUKI+"},
+    {brand:"Toyotomi",model:"TYN/TYG-12R32 PLUS YUKI+",btu:"12000",type:"Mono Split",coolKw:3.52,heatBtu:12011,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:799,discount:40,buyPrice:479.40,margin:25,sellPrice:639.20,features:"Inverter, R32, YUKI+"},
+    {brand:"Toyotomi",model:"TYN/TYG-18R32 PLUS YUKI+",btu:"18000",type:"Mono Split",coolKw:5.20,heatBtu:17743,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1229,discount:40,buyPrice:737.40,margin:25,sellPrice:983.20,features:"Inverter, R32, YUKI+"},
+    {brand:"Toyotomi",model:"TYN/TYG-24R32 PLUS YUKI+",btu:"24000",type:"Mono Split",coolKw:7.00,heatBtu:23885,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1540,discount:40,buyPrice:924.00,margin:25,sellPrice:1232.00,features:"Inverter, R32, YUKI+"},
+    // TOYOTOMI CONSOLA
+    {brand:"Toyotomi",model:"CON28IN/OU24R32 Consola",btu:"9000",type:"Cassete",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1038,discount:40,buyPrice:622.80,margin:25,sellPrice:830.40,features:"Inverter, R32, Consola, Monofase"},
+    {brand:"Toyotomi",model:"CON36IN/OU24R32 Consola",btu:"12000",type:"Cassete",coolKw:3.52,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1113,discount:40,buyPrice:667.80,margin:25,sellPrice:890.40,features:"Inverter, R32, Consola, Monofase"},
+    {brand:"Toyotomi",model:"CON56IN/OU24R32 Consola",btu:"18000",type:"Cassete",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1360,discount:40,buyPrice:816.00,margin:25,sellPrice:1088.00,features:"Inverter, R32, Consola, Monofase"},
+    // MIDEA COMFEE (preço já é de compra com desconto incluído)
+    {brand:"Midea Comfee",model:"MSAFAU-09HRDN8",btu:"9000",type:"Mono Split",coolKw:2.64,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:265.00,margin:25,sellPrice:353.33,features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-12HRDN8",btu:"12000",type:"Mono Split",coolKw:3.52,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:295.00,margin:25,sellPrice:393.33,features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-18HRDN8",btu:"18000",type:"Mono Split",coolKw:5.27,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:473.00,margin:25,sellPrice:630.67,features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-24HRDN8",btu:"24000",type:"Mono Split",coolKw:7.03,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:576.00,margin:25,sellPrice:768.00,features:"Inverter, R32"},
+  ];
+  showToast('A adicionar catálogo AC...');
+  for(const u of units){
+    await addDoc(collection(db,'ep_ac'),{...u,energyClass:u.classCool,createdAt:serverTimestamp()});
+  }
+  showToast(`${units.length} unidades AC adicionadas ✓`);
+}
 </script>
 </body>
 </html>

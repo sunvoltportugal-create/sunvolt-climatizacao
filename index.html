@@ -1064,6 +1064,7 @@ window.renderDesktop=function(){
   const q=(document.getElementById('desktopSearch').value||'').toLowerCase();
   const filtersEl=document.getElementById('desktopFilters');
   const list=document.getElementById('desktopList');
+
   if(currentTab==='stock'){
     const cats=[...new Set(stockItems.map(s=>s.cat).filter(Boolean))];
     filtersEl.innerHTML=[{label:'Todos',val:'all'},...cats.map(c=>({label:c,val:c}))].map(f=>
@@ -1072,60 +1073,92 @@ window.renderDesktop=function(){
       if(stockCatFilter!=='all'&&s.cat!==stockCatFilter)return false;
       if(q&&!((s.name||'').toLowerCase().includes(q)||(s.ref||'').toLowerCase().includes(q)))return false;
       return true;
-    });
-    if(!items.length){list.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>Nenhum material encontrado</p></div>`;return;}
-    list.innerHTML=items.map(s=>{
-      const sc=s.qty<=0?'badge-zero':s.qty<=3?'badge-low':'badge-stock';
-      return`<div class="card">
-        <div class="card-top">
-          <div><div class="card-name">${esc(s.name)}</div>${s.ref?`<div class="card-ref">${esc(s.ref)}</div>`:''}</div>
-          <div class="card-actions">
+    }).sort((a,b)=>(a.sellPrice||0)-(b.sellPrice||0));
+    list.style.display='block';
+    if(!items.length){list.innerHTML=`<div class="empty"><p>Nenhum material encontrado</p></div>`;return;}
+    list.innerHTML=`<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="border-bottom:2px solid var(--border2)">
+        <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Material</th>
+        <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Categoria</th>
+        <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Stock</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Compra</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Venda</th>
+        <th style="padding:8px 12px"></th>
+      </tr></thead>
+      <tbody>${items.map(s=>{
+        const sc=s.qty<=0?'var(--red)':s.qty<=3?'var(--amber)':'var(--green)';
+        return`<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
+          <td style="padding:10px 12px"><div style="font-size:13px;font-weight:500;color:var(--text)">${esc(s.name)}</div>${s.ref?`<div style="font-size:11px;color:var(--text3)">${esc(s.ref)}</div>`:''}</td>
+          <td style="padding:10px 12px"><span class="badge badge-cat">${esc(s.cat||'—')}</span></td>
+          <td style="padding:10px 12px;text-align:center">
+            <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+              <button onclick="updateQty('${s.id}',-1)" style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px">−</button>
+              <span style="font-size:13px;font-weight:600;color:${sc};min-width:24px;text-align:center">${s.qty}</span>
+              <button onclick="updateQty('${s.id}',1)" style="width:22px;height:22px;border-radius:5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px">+</button>
+              <span style="font-size:11px;color:var(--text3)">${s.unit||'un'}</span>
+            </div>
+          </td>
+          <td style="padding:10px 12px;text-align:right;font-size:13px;color:var(--text2)">${s.buyPrice?s.buyPrice.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px;text-align:right;font-size:14px;font-weight:600;color:var(--text)">${s.sellPrice?s.sellPrice.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px"><div style="display:flex;gap:4px;justify-content:flex-end">
             <button class="icon-btn" onclick="editStock('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="icon-btn danger" onclick="deleteStock('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
-          </div>
-        </div>
-        <div class="card-meta">
-          ${s.cat?`<span class="badge badge-cat">${esc(s.cat)}</span>`:''}
-          <span class="badge ${sc}">${s.qty} ${s.unit||'un'}</span>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-            <button onclick="updateQty('${s.id}',-1)" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:15px">−</button>
-            <button onclick="updateQty('${s.id}',1)" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:15px">+</button>
-          </div>
-          <span class="price-tag">${s.sellPrice?s.sellPrice.toFixed(2)+' €':'—'}</span>
-        </div>
-      </div>`;
-    }).join('');
+            <button class="icon-btn danger" onclick="deleteStock('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+          </div></td>
+        </tr>`;}).join('')}</tbody></table>`;
+
   } else if(currentTab==='ac'){
     const brands=[...new Set(acItems.map(a=>a.brand).filter(Boolean))];
     filtersEl.innerHTML=[{label:'Todos',val:'all'},...brands.map(b=>({label:b,val:b}))].map(f=>
-      `<button class="fpill ${acBrandFilter===f.val?'active':''}" onclick="setACFilter('${f.val}')">${f.label}</button>`).join('');
+      `<button class="fpill ${acBrandFilter===f.val?'active':''}" onclick="setACFilterDesk('${f.val}')">${f.label}</button>`).join('');
     let items=acItems.filter(a=>{
       if(acBrandFilter!=='all'&&a.brand!==acBrandFilter)return false;
       if(q&&!((a.brand||'').toLowerCase().includes(q)||(a.model||'').toLowerCase().includes(q)))return false;
       return true;
-    });
-    if(!items.length){list.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>Nenhuma unidade encontrada</p></div>`;return;}
-    list.innerHTML=items.map(a=>{
-      const bc=brandColor(a.brand||'');
-      const margin=a.buyPrice&&a.sellPrice?((a.sellPrice-a.buyPrice)/a.sellPrice*100).toFixed(0):null;
-      return`<div class="ac-card">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between">
-          <div><span class="ac-brand-tag" style="background:${bc}22;color:${bc}">${esc(a.brand)}</span><div class="ac-model">${esc(a.model)}</div></div>
-          <div class="card-actions">
+    }).sort((a,b)=>(a.buyPrice||0)-(b.buyPrice||0));
+    list.style.display='block';
+    if(!items.length){list.innerHTML=`<div class="empty"><p>Nenhuma unidade encontrada</p></div>`;return;}
+    list.innerHTML=`<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="border-bottom:2px solid var(--border2)">
+        <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Marca / Modelo</th>
+        <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">BTU</th>
+        <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">kW ❄️</th>
+        <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Classe</th>
+        <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Gás</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Tabela</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Compra</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Cons.</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Margem</th>
+        <th style="padding:8px 12px"></th>
+      </tr></thead>
+      <tbody>${items.map(a=>{
+        const bc=brandColor(a.brand||'');
+        const consult=(a.sellPrice||0)-(a.buyPrice||0);
+        return`<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
+          <td style="padding:10px 12px">
+            <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${bc}22;color:${bc};margin-right:6px">${esc(a.brand)}</span>
+            <span style="font-size:13px;font-weight:500;color:var(--text)">${esc(a.model)}</span>
+            ${a.features?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(a.features)}</div>`:''}
+          </td>
+          <td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text2)">${a.btu}</td>
+          <td style="padding:10px 12px;text-align:center;font-size:12px;color:var(--text2)">${a.coolKw||'—'}</td>
+          <td style="padding:10px 12px;text-align:center">
+            <span style="font-size:11px;font-weight:600;color:var(--green)">${a.classCool||a.energyClass||'—'}</span>
+            ${a.classHeat&&a.classHeat!==a.classCool?`<span style="font-size:10px;color:var(--amber)"> / ${a.classHeat}</span>`:''}
+          </td>
+          <td style="padding:10px 12px;text-align:center;font-size:11px;color:var(--text3)">${a.gasType||'—'}</td>
+          <td style="padding:10px 12px;text-align:right;font-size:12px;color:var(--text3)">${a.listPrice?a.listPrice.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px;text-align:right;font-size:13px;color:var(--text2)">${a.buyPrice?a.buyPrice.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--accent)">${consult>0?consult.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px;text-align:right"><span style="font-size:12px;font-weight:600;color:var(--green)">${a.margin||0}%</span></td>
+          <td style="padding:10px 12px"><div style="display:flex;gap:4px;justify-content:flex-end">
             <button class="icon-btn" onclick="editAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
             <button class="icon-btn danger" onclick="deleteAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
-          </div>
-        </div>
-        <div class="ac-specs">${[''+a.btu+' BTU',a.kw?a.kw+' kW':'',a.type,'Classe '+a.energyClass,...(a.features||'').split(',').filter(f=>f.trim())].filter(Boolean).map(f=>`<span class="spec-pill">${esc(f.trim())}</span>`).join('')}</div>
-        <div class="ac-prices">
-          <div class="ac-price-item"><div class="ac-price-label">Compra</div><div class="ac-price-val">${a.buyPrice?a.buyPrice.toFixed(2)+' €':'—'}</div></div>
-          <div class="ac-price-item"><div class="ac-price-label">Venda</div><div class="ac-price-val">${a.sellPrice?a.sellPrice.toFixed(2)+' €':'—'}</div></div>
-          ${margin?`<div class="ac-price-item"><div class="ac-price-label">Margem</div><div class="ac-price-val green">${margin}%</div></div>`:''}
-        </div>
-      </div>`;
-    }).join('');
+          </div></td>
+        </tr>`;}).join('')}</tbody></table>`;
+
   } else if(currentTab==='orcamentos'){
     filtersEl.innerHTML='';
+    list.style.display='grid';
     if(!orcamentos.length){list.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>Nenhum orçamento ainda</p></div>`;return;}
     const filtered=orcamentos.filter(o=>!q||(o.client||'').toLowerCase().includes(q)||(o.address||'').toLowerCase().includes(q));
     list.innerHTML=filtered.map(o=>`
@@ -1144,6 +1177,8 @@ window.renderDesktop=function(){
       </div>`).join('');
   }
 };
+
+window.setACFilterDesk=function(val){acBrandFilter=val;renderDesktop();};
 
 // ---- MODALS ----
 window.openModal=function(id){document.getElementById(id).classList.add('show');};
@@ -1240,7 +1275,7 @@ function renderStock(){
     </div>`;}).join('');
 }
 
-window.setStockFilter=function(val){stockCatFilter=val;renderStock();};
+window.setStockFilter=function(val){stockCatFilter=val;if(currentMode==='desktop')renderDesktop();else renderStock();};
 
 // ---- AC PRICE CALC ----
 window.calcAcPrice = function(){
@@ -1945,34 +1980,29 @@ window.showToast=function(msg){
 // ---- SEED AC UNITS ----
 window.seedACUnitsIfEmpty = async function(){
   if(acItems.length > 0){ showToast('Catálogo já tem '+acItems.length+' unidades'); return; }
+  const m = 15; // margem 15%
+  const calc = (buy) => parseFloat((buy / (1 - m/100)).toFixed(2));
   const units = [
-    {brand:"Toyotomi",model:"TSN/TSG-09R32 SORA+",btu:"9000",type:"Mono Split",coolKw:2.60,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:537,discount:40,buyPrice:322.20,margin:25,sellPrice:429.60,features:"Inverter, R32, SORA+"},
-    {brand:"Toyotomi",model:"TSN/TSG-12R32 PLUS SORA+",btu:"12000",type:"Mono Split",coolKw:3.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:574,discount:40,buyPrice:344.40,margin:25,sellPrice:459.20,features:"Inverter, R32, SORA+"},
-    {brand:"Toyotomi",model:"TSN/TSG-18R32 PLUS SORA+",btu:"18000",type:"Mono Split",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:927,discount:40,buyPrice:556.20,margin:25,sellPrice:741.60,features:"Inverter, R32, SORA+"},
-    {brand:"Toyotomi",model:"TSN/TSG-24R32 PLUS SORA+",btu:"24000",type:"Mono Split",coolKw:7.00,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1180,discount:40,buyPrice:708.00,margin:25,sellPrice:944.00,features:"Inverter, R32, SORA+"},
-    {brand:"Toyotomi",model:"UTN/UTG-09CH UMI",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:608,discount:40,buyPrice:364.80,margin:25,sellPrice:486.40,features:"Inverter, R32, UMI, A+++"},
-    {brand:"Toyotomi",model:"UTN/UTG-12CH UMI",btu:"12000",type:"Mono Split",coolKw:3.20,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:649,discount:40,buyPrice:389.40,margin:25,sellPrice:519.20,features:"Inverter, R32, UMI, A+++"},
-    {brand:"Toyotomi",model:"UTN/UTG-18CH UMI",btu:"18000",type:"Mono Split",coolKw:5.30,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1048,discount:40,buyPrice:628.80,margin:25,sellPrice:838.40,features:"Inverter, R32, UMI, A+++"},
-    {brand:"Toyotomi",model:"UTN/UTG-24CH UMI",btu:"24000",type:"Mono Split",coolKw:7.10,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1313,discount:40,buyPrice:787.80,margin:25,sellPrice:1050.40,features:"Inverter, R32, UMI, A+++"},
-    {brand:"Toyotomi",model:"CTN/CTG-328W Erai",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:820,discount:40,buyPrice:492.00,margin:25,sellPrice:656.00,features:"Inverter, R32, Erai, Wi-Fi"},
-    {brand:"Toyotomi",model:"CTN/CTG-335W Erai",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:870,discount:40,buyPrice:522.00,margin:25,sellPrice:696.00,features:"Inverter, R32, Erai, Wi-Fi"},
-    {brand:"Toyotomi",model:"CTN/CTG-356W Erai",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1315,discount:40,buyPrice:789.00,margin:25,sellPrice:1052.00,features:"Inverter, R32, Erai, Wi-Fi"},
-    {brand:"Toyotomi",model:"CTN/CTG-371W Erai",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1599,discount:40,buyPrice:959.40,margin:25,sellPrice:1279.20,features:"Inverter, R32, Erai, Wi-Fi"},
-    {brand:"Toyotomi",model:"CTN/CTG-328BV Erai Black",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:850,discount:40,buyPrice:510.00,margin:25,sellPrice:680.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
-    {brand:"Toyotomi",model:"CTN/CTG-335BV Erai Black",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:900,discount:40,buyPrice:540.00,margin:25,sellPrice:720.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
-    {brand:"Toyotomi",model:"CTN/CTG-356BV Erai Black",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1350,discount:40,buyPrice:810.00,margin:25,sellPrice:1080.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
-    {brand:"Toyotomi",model:"CTN/CTG-371BV Erai Black",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1650,discount:40,buyPrice:990.00,margin:25,sellPrice:1320.00,features:"Inverter, R32, Erai, Wi-Fi, Black"},
-    {brand:"Toyotomi",model:"TYN/TYG-09R32 PLUS YUKI+",btu:"9000",type:"Mono Split",coolKw:2.61,heatBtu:8906,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:729,discount:40,buyPrice:437.40,margin:25,sellPrice:583.20,features:"Inverter, R32, YUKI+"},
-    {brand:"Toyotomi",model:"TYN/TYG-12R32 PLUS YUKI+",btu:"12000",type:"Mono Split",coolKw:3.52,heatBtu:12011,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:799,discount:40,buyPrice:479.40,margin:25,sellPrice:639.20,features:"Inverter, R32, YUKI+"},
-    {brand:"Toyotomi",model:"TYN/TYG-18R32 PLUS YUKI+",btu:"18000",type:"Mono Split",coolKw:5.20,heatBtu:17743,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1229,discount:40,buyPrice:737.40,margin:25,sellPrice:983.20,features:"Inverter, R32, YUKI+"},
-    {brand:"Toyotomi",model:"TYN/TYG-24R32 PLUS YUKI+",btu:"24000",type:"Mono Split",coolKw:7.00,heatBtu:23885,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1540,discount:40,buyPrice:924.00,margin:25,sellPrice:1232.00,features:"Inverter, R32, YUKI+"},
-    {brand:"Toyotomi",model:"CON28IN/OU24R32 Consola",btu:"9000",type:"Cassete",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1038,discount:40,buyPrice:622.80,margin:25,sellPrice:830.40,features:"Inverter, R32, Consola, Monofase"},
-    {brand:"Toyotomi",model:"CON36IN/OU24R32 Consola",btu:"12000",type:"Cassete",coolKw:3.52,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1113,discount:40,buyPrice:667.80,margin:25,sellPrice:890.40,features:"Inverter, R32, Consola, Monofase"},
-    {brand:"Toyotomi",model:"CON56IN/OU24R32 Consola",btu:"18000",type:"Cassete",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1360,discount:40,buyPrice:816.00,margin:25,sellPrice:1088.00,features:"Inverter, R32, Consola, Monofase"},
-    {brand:"Midea Comfee",model:"MSAFAU-09HRDN8",btu:"9000",type:"Mono Split",coolKw:2.64,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:265.00,margin:25,sellPrice:353.33,features:"Inverter, R32"},
-    {brand:"Midea Comfee",model:"MSAFAU-12HRDN8",btu:"12000",type:"Mono Split",coolKw:3.52,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:295.00,margin:25,sellPrice:393.33,features:"Inverter, R32"},
-    {brand:"Midea Comfee",model:"MSAFAU-18HRDN8",btu:"18000",type:"Mono Split",coolKw:5.27,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:473.00,margin:25,sellPrice:630.67,features:"Inverter, R32"},
-    {brand:"Midea Comfee",model:"MSAFAU-24HRDN8",btu:"24000",type:"Mono Split",coolKw:7.03,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:576.00,margin:25,sellPrice:768.00,features:"Inverter, R32"},
+    // TOYOTOMI SORA+
+    {brand:"Toyotomi",model:"TSN/TSG-09R32 SORA+",btu:"9000",type:"Mono Split",coolKw:2.60,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:537,discount:40,buyPrice:322.20,margin:m,sellPrice:calc(322.20),features:"Inverter, R32, SORA+"},
+    {brand:"Toyotomi",model:"TSN/TSG-12R32 PLUS SORA+",btu:"12000",type:"Mono Split",coolKw:3.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:574,discount:40,buyPrice:344.40,margin:m,sellPrice:calc(344.40),features:"Inverter, R32, SORA+"},
+    {brand:"Toyotomi",model:"TSN/TSG-18R32 PLUS SORA+",btu:"18000",type:"Mono Split",coolKw:5.20,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:927,discount:40,buyPrice:556.20,margin:m,sellPrice:calc(556.20),features:"Inverter, R32, SORA+"},
+    {brand:"Toyotomi",model:"TSN/TSG-24R32 PLUS SORA+",btu:"24000",type:"Mono Split",coolKw:7.00,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1180,discount:40,buyPrice:708.00,margin:m,sellPrice:calc(708.00),features:"Inverter, R32, SORA+"},
+    // TOYOTOMI UMI
+    {brand:"Toyotomi",model:"UTN/UTG-09CH UMI",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:608,discount:40,buyPrice:364.80,margin:m,sellPrice:calc(364.80),features:"Inverter, R32, UMI, A+++"},
+    {brand:"Toyotomi",model:"UTN/UTG-12CH UMI",btu:"12000",type:"Mono Split",coolKw:3.20,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:649,discount:40,buyPrice:389.40,margin:m,sellPrice:calc(389.40),features:"Inverter, R32, UMI, A+++"},
+    {brand:"Toyotomi",model:"UTN/UTG-18CH UMI",btu:"18000",type:"Mono Split",coolKw:5.30,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1048,discount:40,buyPrice:628.80,margin:m,sellPrice:calc(628.80),features:"Inverter, R32, UMI, A+++"},
+    {brand:"Toyotomi",model:"UTN/UTG-24CH UMI",btu:"24000",type:"Mono Split",coolKw:7.10,classCool:"A+++",classHeat:"A+++",gasType:"R32",listPrice:1313,discount:40,buyPrice:787.80,margin:m,sellPrice:calc(787.80),features:"Inverter, R32, UMI, A+++"},
+    // TOYOTOMI ERAI BLACK
+    {brand:"Toyotomi",model:"CTN/CTG-328BV Erai Black",btu:"9000",type:"Mono Split",coolKw:2.70,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:850,discount:40,buyPrice:510.00,margin:m,sellPrice:calc(510.00),features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    {brand:"Toyotomi",model:"CTN/CTG-335BV Erai Black",btu:"12000",type:"Mono Split",coolKw:3.51,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:900,discount:40,buyPrice:540.00,margin:m,sellPrice:calc(540.00),features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    {brand:"Toyotomi",model:"CTN/CTG-356BV Erai Black",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1350,discount:40,buyPrice:810.00,margin:m,sellPrice:calc(810.00),features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    {brand:"Toyotomi",model:"CTN/CTG-371BV Erai Black",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1650,discount:40,buyPrice:990.00,margin:m,sellPrice:calc(990.00),features:"Inverter, R32, Erai, Wi-Fi, Black"},
+    // MIDEA COMFEE
+    {brand:"Midea Comfee",model:"MSAFAU-09HRDN8",btu:"9000",type:"Mono Split",coolKw:2.64,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:265.00,margin:m,sellPrice:calc(265.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-12HRDN8",btu:"12000",type:"Mono Split",coolKw:3.52,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:295.00,margin:m,sellPrice:calc(295.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-18HRDN8",btu:"18000",type:"Mono Split",coolKw:5.27,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:473.00,margin:m,sellPrice:calc(473.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-24HRDN8",btu:"24000",type:"Mono Split",coolKw:7.03,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:576.00,margin:m,sellPrice:calc(576.00),features:"Inverter, R32"},
   ];
   showToast('A adicionar ' + units.length + ' unidades...');
   let count = 0;
@@ -1980,7 +2010,7 @@ window.seedACUnitsIfEmpty = async function(){
     try{
       await addDoc(collection(db,'ep_ac'),{...u,energyClass:u.classCool,createdAt:serverTimestamp()});
       count++;
-    }catch(e){ console.error('Erro a adicionar',u.model,e); }
+    }catch(e){ console.error('Erro',u.model,e); }
   }
   showToast(count + ' unidades AC adicionadas ✓');
 };

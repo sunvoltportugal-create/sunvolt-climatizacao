@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>SunVolt</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0F1117;
+  --surface:#1A1D27;
+  --surface2:#222536;
+  --surface3:#2A2E40;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.13);
+  --text:#F0F2F8;
+  --text2:#8B90A8;
+  --text3:#555B75;
+  --accent:#3D8EF0;
+  --accent-light:rgba(61,142,240,0.12);
+  --green:#2ECC8A;
+  --green-light:rgba(46,204,138,0.12);
+  --amber:#F0A633;
+  --amber-light:rgba(240,166,51,0.12);
+  --red:#E05C6A;
+  --red-light:rgba(224,92,106,0.12);
+  --radius:14px;
+  --radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);overflow:hidden}
+h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
+
+/* CONFIG */
+#configScreen{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;max-width:430px;margin:0 auto}
+.brand-logo{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-1px}
+.brand-logo span{color:var(--accent)}
+.cfg-sub{font-size:13px;color:var(--text2);margin-bottom:36px;text-align:center;line-height:1.6}
+.cfg-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);display:block;margin-bottom:7px}
+.cfg-input{width:100%;height:48px;padding:0 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;margin-bottom:16px}
+.cfg-input:focus{border-color:var(--accent)}
+.cfg-btn{width:100%;height:50px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.3px}
+.cfg-note{font-size:12px;color:var(--text3);text-align:center;margin-top:18px;line-height:1.7}
+.cfg-note a{color:var(--accent);text-decoration:none}
+
+/* LAYOUT */
+#appWrap{height:100%;display:none;flex-direction:column;max-width:430px;margin:0 auto}
+#appWrap.show{display:flex}
+
+/* HEADER */
+.app-header{padding:52px 18px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.app-brand{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.app-brand span{color:var(--accent)}
+.header-badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(61,142,240,.2)}
+
+/* TABS */
+.tabs{display:flex;margin:0 18px 14px;background:var(--surface);border-radius:var(--radius-sm);padding:3px;gap:2px;flex-shrink:0;border:1px solid var(--border)}
+.tab{flex:1;height:34px;border-radius:7px;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab svg{width:13px;height:13px}
+.tab.active{background:var(--surface3);color:var(--text)}
+
+/* VIEWS */
+.views{flex:1;overflow:hidden;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;padding:0 18px 100px;display:none}
+.view.active{display:block}
+.view::-webkit-scrollbar{display:none}
+
+/* SECTION HEADER */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:sticky;top:0;z-index:10;padding:8px 0;background:var(--bg)}
+.sec-title{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.sec-count{font-size:12px;color:var(--text3);margin-left:6px}
+.btn-add{height:36px;padding:0 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-add svg{width:14px;height:14px}
+
+/* SEARCH */
+.search-bar{position:relative;margin-bottom:12px}
+.search-bar input{width:100%;height:40px;padding:0 14px 0 38px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none}
+.search-bar input:focus{border-color:var(--accent)}
+.search-bar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text3)}
+
+/* FILTER PILLS */
+.filter-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.filter-row::-webkit-scrollbar{display:none}
+.fpill{height:28px;padding:0 11px;border-radius:14px;border:1px solid var(--border2);background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s}
+.fpill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;transition:border-color .15s}
+.card:hover{border-color:var(--border2)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.card-name{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.2px}
+.card-ref{font-size:11px;color:var(--text3);margin-top:2px}
+.card-actions{display:flex;gap:4px;flex-shrink:0}
+.icon-btn{width:30px;height:30px;border:1px solid var(--border2);background:transparent;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
+.icon-btn:hover{border-color:var(--border2);background:var(--surface2)}
+.icon-btn svg{width:13px;height:13px}
+.icon-btn.danger:hover{color:var(--red);border-color:var(--red-light)}
+.card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:6px}
+.badge-cat{background:var(--surface3);color:var(--text2)}
+.badge-stock{background:var(--green-light);color:var(--green)}
+.badge-low{background:var(--amber-light);color:var(--amber)}
+.badge-zero{background:var(--red-light);color:var(--red)}
+.price-tag{font-size:13px;font-weight:600;color:var(--text);margin-left:auto}
+
+/* AC CARD */
+.ac-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
+.ac-brand-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:5px;margin-bottom:8px;display:inline-block}
+.ac-model{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.ac-specs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.spec-pill{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--surface3);color:var(--text2)}
+.ac-prices{display:flex;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.ac-price-item{flex:1}
+.ac-price-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.ac-price-val{font-size:14px;font-weight:600;color:var(--text)}
+.ac-price-val.green{color:var(--green)}
+
+/* ORÇAMENTO */
+.orc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
+.orc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.orc-name{font-size:14px;font-weight:600}
+.orc-date{font-size:11px;color:var(--text3);margin-top:2px}
+.orc-total{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:-.5px}
+.orc-total-label{font-size:10px;color:var(--text3)}
+.orc-footer{display:flex;gap:6px;margin-top:10px}
+.orc-btn{flex:1;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.orc-btn:hover{background:var(--surface2)}
+.orc-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.orc-btn svg{width:13px;height:13px}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty svg{width:44px;height:44px;margin-bottom:12px;opacity:.25}
+.empty p{font-size:13px}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;background:rgba(15,17,23,.92);backdrop-filter:blur(14px);border-top:1px solid var(--border);display:flex;padding:10px 0 26px}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px;border:none;background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:10px;font-weight:500;transition:color .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:22px;height:22px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;display:none;align-items:flex-end;justify-content:center;max-width:430px;margin:0 auto}
+.modal-overlay.show{display:flex}
+.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px 40px;width:100%;max-height:92vh;overflow-y:auto}
+.modal-sheet::-webkit-scrollbar{display:none}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-.3px}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);display:block;margin-bottom:6px;margin-top:14px}
+.field-label:first-of-type{margin-top:0}
+.field-input{width:100%;height:46px;padding:0 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none}
+.field-input:focus{border-color:var(--accent)}
+.field-select{width:100%;height:46px;padding:0 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;appearance:none}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;margin-top:20px}
+.modal-btn{flex:1;height:48px;border-radius:var(--radius-sm);border:none;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.modal-btn.confirm{background:var(--accent);color:#fff}
+.modal-btn.cancel{background:var(--surface3);color:var(--text2)}
+
+/* ORC BUILDER */
+.orc-section{margin-bottom:18px}
+.orc-sec-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:10px}
+.orc-item-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.orc-item-row:last-child{border-bottom:none}
+.orc-item-name{flex:1;font-size:13px;color:var(--text)}
+.orc-item-qty{width:56px;height:32px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;text-align:center}
+.orc-item-price{font-size:13px;font-weight:600;color:var(--text);min-width:60px;text-align:right}
+.orc-total-bar{background:var(--surface3);border-radius:var(--radius-sm);padding:14px;margin-top:14px}
+.orc-total-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px}
+.orc-total-row.big{font-size:16px;font-weight:700;color:var(--text);margin-bottom:0}
+.orc-total-row.big span:last-child{color:var(--accent)}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0}
+
+/* PDF PREVIEW */
+#pdfModal .modal-sheet{background:var(--surface)}
+.pdf-preview{background:#fff;border-radius:10px;padding:24px;color:#111;font-family:'Inter',sans-serif;font-size:12px;line-height:1.6;margin-bottom:16px}
+.pdf-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #111}
+.pdf-brand{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#111;letter-spacing:-.5px}
+.pdf-brand span{color:#3D8EF0}
+.pdf-meta{text-align:right;font-size:11px;color:#555}
+.pdf-client{margin-bottom:16px;padding:12px;background:#f5f7fa;border-radius:8px}
+.pdf-client-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:3px}
+.pdf-client-name{font-size:14px;font-weight:600;color:#111}
+.pdf-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.pdf-table th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;padding:6px 8px;border-bottom:1px solid #e0e0e0;text-align:left}
+.pdf-table th:last-child{text-align:right}
+.pdf-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:top}
+.pdf-table td:last-child{text-align:right;font-weight:600;color:#111}
+.pdf-totals{padding:12px;background:#f5f7fa;border-radius:8px}
+.pdf-tot-row{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px}
+.pdf-tot-row.final{font-size:15px;font-weight:700;color:#111;margin-bottom:0;padding-top:8px;border-top:1px solid #ddd;margin-top:6px}
+.pdf-footer{font-size:10px;color:#aaa;text-align:center;margin-top:14px}
+
+/* TOAST */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--surface3);color:var(--text);padding:10px 18px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:200;border:1px solid var(--border2)}
+.toast.show{opacity:1}
+
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.sync-dot.off{background:var(--amber)}
+.inst-type-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:var(--surface);cursor:pointer;transition:all .2s;color:var(--text2)}
+.inst-type-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--text)}
+</style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div id="configScreen">
+  <div class="brand-logo">Sun<span>Volt</span></div>
+  <p class="cfg-sub">Liga ao Firebase para aceder<br/>em todos os teus dispositivos.</p>
+  <label class="cfg-label">Firebase API Key</label>
+  <input class="cfg-input" id="cfgKey" placeholder="AIzaSy..." autocomplete="off" spellcheck="false"/>
+  <label class="cfg-label">Project ID</label>
+  <input class="cfg-input" id="cfgProject" placeholder="meu-projeto-xxxxx" autocomplete="off" spellcheck="false"/>
+  <button class="cfg-btn" onclick="saveConfig()">Entrar →</button>
+  <p class="cfg-note">
+    Cria projeto gratuito em <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a><br/>
+    Firestore → Criar base de dados → modo teste
+  </p>
+</div>
+
+<div id="appWrap">
+  <div class="app-header">
+    <div class="app-brand">Sun<span>Volt</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="sync-dot" id="syncDot"></div>
+      <div class="header-badge" id="headerBadge">Bruno Sequeira</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('stock',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>
+      Stock
+    </button>
+    <button class="tab" onclick="setTab('ac',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="10" rx="2"/><path d="M7 17h10M9 21h6M12 13v4"/></svg>
+      AC
+    </button>
+    <button class="tab" onclick="setTab('orcamentos',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Orçamentos
+    </button>
+  </div>
+  <div class="views">
+
+    <!-- STOCK -->
+    <div class="view active" id="view-stock">
+      <div class="sec-header">
+        <div><span class="sec-title">Stock</span><span class="sec-count" id="stockCount"></span></div>
+        <button class="btn-add" onclick="openModal('stockModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo item
+        </button>
+      </div>
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="stockSearch" placeholder="Pesquisar material..." oninput="renderStock()"/>
+      </div>
+      <div class="filter-row" id="stockFilters"></div>
+      <div id="stockList"></div>
+    </div>
+
+    <!-- AC -->
+    <div class="view" id="view-ac">
+      <div class="sec-header">
+        <div><span class="sec-title">Unidades AC</span><span class="sec-count" id="acCount"></span></div>
+        <button class="btn-add" onclick="openModal('acModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova unidade
+        </button>
+      </div>
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="acSearch" placeholder="Pesquisar marca ou modelo..." oninput="renderAC()"/>
+      </div>
+      <div class="filter-row" id="acFilters"></div>
+      <div id="acList"></div>
+    </div>
+
+    <!-- ORÇAMENTOS -->
+    <div class="view" id="view-orcamentos">
+      <div class="sec-header">
+        <div><span class="sec-title">Orçamentos</span><span class="sec-count" id="orcCount"></span></div>
+        <button class="btn-add" onclick="openOrcBuilder()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo
+        </button>
+      </div>
+      <div id="orcList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STOCK MODAL -->
+<div class="modal-overlay" id="stockModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="stockModalTitle">Novo material</div>
+    <div class="modal-sub">Adiciona ao teu stock de material elétrico</div>
+    <input type="hidden" id="stockEditId"/>
+    <label class="field-label">Nome do material</label>
+    <input class="field-input" id="sName" placeholder="Ex: Tubo corrugado VD 20mm"/>
+    <label class="field-label">Categoria</label>
+    <input class="field-input" id="sCat" placeholder="Ex: Tubagem, Cabos, Suportes..."/>
+    <label class="field-label">Referência / Marca</label>
+    <input class="field-input" id="sRef" placeholder="Ex: Gewiss GW15062"/>
+    <div class="field-row">
+      <div>
+        <label class="field-label">Quantidade em stock</label>
+        <input class="field-input" id="sQty" type="number" placeholder="0"/>
+      </div>
+      <div>
+        <label class="field-label">Unidade</label>
+        <select class="field-select" id="sUnit">
+          <option>un</option><option>m</option><option>rolo</option><option>caixa</option><option>kg</option><option>par</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="field-label">Preço de compra (€)</label>
+        <input class="field-input" id="sBuyPrice" type="number" step="0.01" placeholder="0.00"/>
+      </div>
+      <div>
+        <label class="field-label">Preço de venda (€)</label>
+        <input class="field-input" id="sSellPrice" type="number" step="0.01" placeholder="0.00"/>
+      </div>
+    </div>
+    <label class="field-label">Notas</label>
+    <input class="field-input" id="sNotes" placeholder="Opcional"/>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('stockModal')">Cancelar</button>
+      <button class="modal-btn confirm" onclick="saveStock()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- AC MODAL -->
+<div class="modal-overlay" id="acModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="acModalTitle">Nova unidade AC</div>
+    <div class="modal-sub">Catálogo de unidades de ar condicionado</div>
+    <input type="hidden" id="acEditId"/>
+    <div class="field-row">
+      <div>
+        <label class="field-label">Marca</label>
+        <input class="field-input" id="acBrand" placeholder="Ex: Daikin"/>
+      </div>
+      <div>
+        <label class="field-label">Modelo</label>
+        <input class="field-input" id="acModel" placeholder="Ex: FTXC25D"/>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="field-label">BTU</label>
+        <select class="field-select" id="acBtu">
+          <option>9000</option><option>12000</option><option>18000</option><option>24000</option><option>36000</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">Tipo</label>
+        <select class="field-select" id="acType">
+          <option>Mono Split</option><option>Multi Split</option><option>Cassete</option><option>Ducted</option><option>Portátil</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label class="field-label">Classe energética</label>
+        <select class="field-select" id="acClass">
+          <option>A+++</option><option>A++</option><option>A+</option><option>A</option><option>B</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">kW (frio)</label>
+        <input class="field-input" id="acKw" type="number" step="0.1" placeholder="2.5"/>
+      </div>
+    </div>
+    <label class="field-label">Características extra</label>
+    <input class="field-input" id="acFeatures" placeholder="Ex: Wi-Fi, Inverter, R32, Self-clean"/>
+    <div class="field-row">
+      <div>
+        <label class="field-label">Preço de compra (€)</label>
+        <input class="field-input" id="acBuyPrice" type="number" step="0.01" placeholder="0.00"/>
+      </div>
+      <div>
+        <label class="field-label">Preço de venda (€)</label>
+        <input class="field-input" id="acSellPrice" type="number" step="0.01" placeholder="0.00"/>
+      </div>
+    </div>
+    <label class="field-label">Notas / Observações</label>
+    <input class="field-input" id="acNotes" placeholder="Opcional"/>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('acModal')">Cancelar</button>
+      <button class="modal-btn confirm" onclick="saveAC()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORC BUILDER MODAL -->
+<div class="modal-overlay" id="orcModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Novo orçamento</div>
+    <div class="modal-sub">Instalação de ar condicionado</div>
+
+    <label class="field-label">Nome do cliente</label>
+    <input class="field-input" id="orcClient" placeholder="Ex: João Silva"/>
+    <label class="field-label">Morada / Local de instalação</label>
+    <input class="field-input" id="orcAddress" placeholder="Ex: Rua X, Lisboa"/>
+    <label class="field-label">Notas internas</label>
+    <input class="field-input" id="orcNotes" placeholder="Ex: Apartamento 2º andar, parede de betão"/>
+
+    <div class="orc-section" style="margin-top:18px">
+      <div class="orc-sec-title">Tipo de instalação</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="inst-type-btn active" id="instTypeCompleta" onclick="setInstType('completa',this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+          <span style="font-size:13px;font-weight:600">Instalação completa</span>
+          <span style="font-size:11px;color:var(--text3)">Com furos para exterior</span>
+        </button>
+        <button class="inst-type-btn" id="instTypeSimples" onclick="setInstType('simples',this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span style="font-size:13px;font-weight:600">Instalação simples</span>
+          <span style="font-size:11px;color:var(--text3)">Pré-instalação existente</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Serviços incluídos</div>
+      <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px">
+        <div id="servicesList" style="font-size:12px;color:var(--text2);line-height:2"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;padding:10px;background:var(--amber-light);border-radius:var(--radius-sm);border:1px solid rgba(240,166,51,.2)">
+        <input type="checkbox" id="orcAddGas" onchange="toggleGasPrice()" style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
+        <label for="orcAddGas" style="font-size:13px;color:var(--amber);font-weight:500;cursor:pointer">Carga de gás (tubagem &gt; 5m)</label>
+        <input class="orc-item-qty" type="number" step="0.01" id="orcGasPrice" placeholder="€" oninput="calcOrcTotal()" style="width:70px;margin-left:auto;display:none"/>
+      </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Comprimento da tubagem</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input class="field-input" id="orcTubeLength" type="number" step="0.5" min="0" placeholder="Ex: 4" style="flex:1"/>
+        <span style="font-size:14px;color:var(--text2);white-space:nowrap">metros</span>
+      </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Unidade AC</div>
+      <select class="field-select" id="orcAcSelect" onchange="updateOrcAcPrice()">
+        <option value="">— Selecionar unidade —</option>
+      </select>
+      <div id="orcAcInfo" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Material do stock</div>
+      <div id="orcStockItems"></div>
+      <button onclick="addOrcStockLine()" style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">+ Adicionar material</button>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Mão de obra & Deslocação</div>
+      <div class="orc-item-row">
+        <span class="orc-item-name">Mão de obra</span>
+        <input class="orc-item-qty" type="number" step="0.01" id="orcLabour" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
+      </div>
+      <div class="orc-item-row">
+        <span class="orc-item-name">Deslocação</span>
+        <input class="orc-item-qty" type="number" step="0.01" id="orcTravel" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
+      </div>
+    </div>
+
+    <div class="orc-total-bar">
+      <div class="orc-total-row"><span>Subtotal (s/ IVA)</span><span id="orcSubtotal">0.00 €</span></div>
+      <div class="orc-total-row"><span>IVA 23%</span><span id="orcIva">0.00 €</span></div>
+      <hr class="divider"/>
+      <div class="orc-total-row big"><span>Total</span><span id="orcTotalVal">0.00 €</span></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('orcModal')">Cancelar</button>
+      <button class="modal-btn confirm" onclick="saveOrc()">Guardar orçamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- RELATÓRIO FINAL MODAL -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Relatório de instalação</div>
+    <div class="modal-sub" id="reportClientLabel">Preenche os valores obtidos durante a instalação</div>
+
+    <div class="orc-section" style="margin-top:4px">
+      <div class="orc-sec-title">Teste de estanquicidade (Azoto N₂)</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Pressão 10 bar — resultado</label>
+          <select class="field-select" id="rp10"><option value="OK ✓">OK ✓</option><option value="Falhou ✗">Falhou ✗</option></select>
+        </div>
+        <div>
+          <label class="field-label">Tempo de espera</label>
+          <input class="field-input" id="rp10time" placeholder="Ex: 15 min"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Pressão 20 bar — resultado</label>
+          <select class="field-select" id="rp20"><option value="OK ✓">OK ✓</option><option value="Falhou ✗">Falhou ✗</option></select>
+        </div>
+        <div>
+          <label class="field-label">Tempo de espera</label>
+          <input class="field-input" id="rp20time" placeholder="Ex: 15 min"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Pressão 40 bar — resultado</label>
+          <select class="field-select" id="rp40"><option value="OK ✓">OK ✓</option><option value="Falhou ✗">Falhou ✗</option></select>
+        </div>
+        <div>
+          <label class="field-label">Tempo de espera</label>
+          <input class="field-input" id="rp40time" placeholder="Ex: 30 min"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Vácuo</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Vácuo atingido (microns)</label>
+          <input class="field-input" id="rVacuum" type="number" placeholder="Ex: 350"/>
+        </div>
+        <div>
+          <label class="field-label">Tempo de vácuo</label>
+          <input class="field-input" id="rVacuumTime" placeholder="Ex: 45 min"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Carga de gás</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <input type="checkbox" id="rGasAdded" onchange="toggleReportGas()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer"/>
+        <label for="rGasAdded" style="font-size:13px;color:var(--text2);cursor:pointer">Foi necessário adicionar gás</label>
+      </div>
+      <div id="rGasFields" style="display:none">
+        <div class="field-row">
+          <div>
+            <label class="field-label">Quantidade adicionada (g)</label>
+            <input class="field-input" id="rGasQty" placeholder="Ex: 150"/>
+          </div>
+          <div>
+            <label class="field-label">Tipo de gás</label>
+            <select class="field-select" id="rGasType"><option>R32</option><option>R410A</option><option>R22</option><option>R290</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Testes de temperatura</div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Modo frio — insuflação (°C)</label>
+          <input class="field-input" id="rColdIn" type="number" step="0.1" placeholder="Ex: 12"/>
+        </div>
+        <div>
+          <label class="field-label">Modo frio — retorno (°C)</label>
+          <input class="field-input" id="rColdOut" type="number" step="0.1" placeholder="Ex: 24"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Modo quente — insuflação (°C)</label>
+          <input class="field-input" id="rHotIn" type="number" step="0.1" placeholder="Ex: 42"/>
+        </div>
+        <div>
+          <label class="field-label">Modo quente — retorno (°C)</label>
+          <input class="field-input" id="rHotOut" type="number" step="0.1" placeholder="Ex: 22"/>
+        </div>
+      </div>
+      <label class="field-label">Temperatura ambiente no momento do teste (°C)</label>
+      <input class="field-input" id="rAmbient" type="number" step="0.1" placeholder="Ex: 20"/>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">Observações finais</div>
+      <input class="field-input" id="rObservations" placeholder="Ex: Instalação sem anomalias, unidade a funcionar correctamente"/>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('reportModal')">Cancelar</button>
+      <button class="modal-btn confirm" onclick="saveAndShowReport()">Gerar relatório</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF MODAL -->
+<div class="modal-overlay" id="pdfModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Pré-visualização PDF</div>
+    <div id="pdfPreviewArea"></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal('pdfModal')">Fechar</button>
+      <button class="modal-btn confirm" onclick="printPdf()">
+        Imprimir / PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+let db;
+let stockItems=[], acItems=[], orcamentos=[];
+let stockCatFilter='all', acBrandFilter='all';
+let orcStockLines=[];
+let currentOrcAcPrice=0;
+
+// CONFIG
+const cfg = JSON.parse(localStorage.getItem('ep_config')||'null');
+if(cfg) initApp(cfg);
+
+window.saveConfig = function(){
+  const k=document.getElementById('cfgKey').value.trim();
+  const p=document.getElementById('cfgProject').value.trim();
+  if(!k||!p){showToast('Preenche os dois campos');return;}
+  const config={apiKey:k,projectId:p,authDomain:`${p}.firebaseapp.com`,storageBucket:`${p}.appspot.com`,messagingSenderId:'',appId:''};
+  localStorage.setItem('ep_config',JSON.stringify(config));
+  initApp(config);
+};
+
+function initApp(config){
+  try{
+    const app=initializeApp(config);
+    db=getFirestore(app);
+    document.getElementById('configScreen').style.display='none';
+    document.getElementById('appWrap').classList.add('show');
+    subscribeAll();
+  }catch(e){showToast('Erro Firebase: verifica credenciais');}
+}
+
+function subscribeAll(){
+  const setSync=v=>document.getElementById('syncDot').className='sync-dot'+(v?'':' off');
+  onSnapshot(query(collection(db,'ep_stock'),orderBy('createdAt','desc')),
+    s=>{stockItems=s.docs.map(d=>({id:d.id,...d.data()}));renderStock();setSync(true);},()=>setSync(false));
+  onSnapshot(query(collection(db,'ep_ac'),orderBy('brand','asc')),
+    s=>{acItems=s.docs.map(d=>({id:d.id,...d.data()}));renderAC();},()=>{});
+  onSnapshot(query(collection(db,'ep_orc'),orderBy('createdAt','desc')),
+    s=>{orcamentos=s.docs.map(d=>({id:d.id,...d.data()}));renderOrc();},()=>{});
+}
+
+// ---- TAB ----
+let currentTab='stock';
+window.setTab=function(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+};
+
+// ---- MODALS ----
+window.openModal=function(id){document.getElementById(id).classList.add('show');};
+window.closeModal=function(id){document.getElementById(id).classList.remove('show');};
+
+// ---- STOCK ----
+window.saveStock=async function(){
+  const id=document.getElementById('stockEditId').value;
+  const data={
+    name:document.getElementById('sName').value.trim(),
+    cat:document.getElementById('sCat').value.trim(),
+    ref:document.getElementById('sRef').value.trim(),
+    qty:parseFloat(document.getElementById('sQty').value)||0,
+    unit:document.getElementById('sUnit').value,
+    buyPrice:parseFloat(document.getElementById('sBuyPrice').value)||0,
+    sellPrice:parseFloat(document.getElementById('sSellPrice').value)||0,
+    notes:document.getElementById('sNotes').value.trim(),
+  };
+  if(!data.name){showToast('Introduz o nome do material');return;}
+  if(id){await updateDoc(doc(db,'ep_stock',id),data);}
+  else{data.createdAt=serverTimestamp();await addDoc(collection(db,'ep_stock'),data);}
+  closeModal('stockModal');clearStockForm();showToast(id?'Material atualizado':'Material adicionado ✓');
+};
+
+function clearStockForm(){
+  ['stockEditId','sName','sCat','sRef','sQty','sBuyPrice','sSellPrice','sNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('sUnit').value='un';
+  document.getElementById('stockModalTitle').textContent='Novo material';
+}
+
+window.editStock=function(id){
+  const s=stockItems.find(x=>x.id===id);if(!s)return;
+  document.getElementById('stockEditId').value=id;
+  document.getElementById('sName').value=s.name||'';
+  document.getElementById('sCat').value=s.cat||'';
+  document.getElementById('sRef').value=s.ref||'';
+  document.getElementById('sQty').value=s.qty||0;
+  document.getElementById('sUnit').value=s.unit||'un';
+  document.getElementById('sBuyPrice').value=s.buyPrice||0;
+  document.getElementById('sSellPrice').value=s.sellPrice||0;
+  document.getElementById('sNotes').value=s.notes||'';
+  document.getElementById('stockModalTitle').textContent='Editar material';
+  openModal('stockModal');
+};
+
+window.deleteStock=async function(id){
+  if(!confirm('Apagar este material?'))return;
+  await deleteDoc(doc(db,'ep_stock',id));
+  showToast('Material removido');
+};
+
+window.updateQty=async function(id,delta){
+  const s=stockItems.find(x=>x.id===id);if(!s)return;
+  const newQty=Math.max(0,(s.qty||0)+delta);
+  await updateDoc(doc(db,'ep_stock',id),{qty:newQty});
+};
+
+function renderStock(){
+  const q=(document.getElementById('stockSearch').value||'').toLowerCase();
+  const cats=[...new Set(stockItems.map(s=>s.cat).filter(Boolean))];
+  const filtersEl=document.getElementById('stockFilters');
+  filtersEl.innerHTML=[{label:'Todos',val:'all'},...cats.map(c=>({label:c,val:c}))].map(f=>
+    `<button class="fpill ${stockCatFilter===f.val?'active':''}" onclick="setStockFilter('${f.val}')">${f.label}</button>`).join('');
+  let list=stockItems.filter(s=>{
+    if(stockCatFilter!=='all'&&s.cat!==stockCatFilter)return false;
+    if(q&&!((s.name||'').toLowerCase().includes(q)||(s.ref||'').toLowerCase().includes(q)||(s.cat||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  document.getElementById('stockCount').textContent=` (${list.length})`;
+  if(!list.length){document.getElementById('stockList').innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg><p>Nenhum material no stock</p></div>`;return;}
+  document.getElementById('stockList').innerHTML=list.map(s=>{
+    const stockClass=s.qty<=0?'badge-zero':s.qty<=3?'badge-low':'badge-stock';
+    return`<div class="card">
+      <div class="card-top">
+        <div>
+          <div class="card-name">${esc(s.name)}</div>
+          ${s.ref?`<div class="card-ref">${esc(s.ref)}</div>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="editStock('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn danger" onclick="deleteStock('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${s.cat?`<span class="badge badge-cat">${esc(s.cat)}</span>`:''}
+        <span class="badge ${stockClass}">${s.qty} ${s.unit||'un'}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <button onclick="updateQty('${s.id}',-1)" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center">−</button>
+          <button onclick="updateQty('${s.id}',1)" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center">+</button>
+        </div>
+        <span class="price-tag">${s.sellPrice?s.sellPrice.toFixed(2)+' €':'—'}</span>
+      </div>
+      ${s.notes?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">${esc(s.notes)}</div>`:''}
+    </div>`;}).join('');
+}
+
+window.setStockFilter=function(val){stockCatFilter=val;renderStock();};
+
+// ---- AC ----
+window.saveAC=async function(){
+  const id=document.getElementById('acEditId').value;
+  const data={
+    brand:document.getElementById('acBrand').value.trim(),
+    model:document.getElementById('acModel').value.trim(),
+    btu:document.getElementById('acBtu').value,
+    type:document.getElementById('acType').value,
+    energyClass:document.getElementById('acClass').value,
+    kw:parseFloat(document.getElementById('acKw').value)||0,
+    features:document.getElementById('acFeatures').value.trim(),
+    buyPrice:parseFloat(document.getElementById('acBuyPrice').value)||0,
+    sellPrice:parseFloat(document.getElementById('acSellPrice').value)||0,
+    notes:document.getElementById('acNotes').value.trim(),
+  };
+  if(!data.brand||!data.model){showToast('Preenche marca e modelo');return;}
+  if(id){await updateDoc(doc(db,'ep_ac',id),data);}
+  else{data.createdAt=serverTimestamp();await addDoc(collection(db,'ep_ac'),data);}
+  closeModal('acModal');clearACForm();showToast(id?'Unidade atualizada':'Unidade adicionada ✓');
+};
+
+function clearACForm(){
+  ['acEditId','acBrand','acModel','acKw','acFeatures','acBuyPrice','acSellPrice','acNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('acModalTitle').textContent='Nova unidade AC';
+}
+
+window.editAC=function(id){
+  const a=acItems.find(x=>x.id===id);if(!a)return;
+  document.getElementById('acEditId').value=id;
+  document.getElementById('acBrand').value=a.brand||'';
+  document.getElementById('acModel').value=a.model||'';
+  document.getElementById('acBtu').value=a.btu||'9000';
+  document.getElementById('acType').value=a.type||'Mono Split';
+  document.getElementById('acClass').value=a.energyClass||'A++';
+  document.getElementById('acKw').value=a.kw||'';
+  document.getElementById('acFeatures').value=a.features||'';
+  document.getElementById('acBuyPrice').value=a.buyPrice||'';
+  document.getElementById('acSellPrice').value=a.sellPrice||'';
+  document.getElementById('acNotes').value=a.notes||'';
+  document.getElementById('acModalTitle').textContent='Editar unidade';
+  openModal('acModal');
+};
+
+window.deleteAC=async function(id){
+  if(!confirm('Apagar esta unidade?'))return;
+  await deleteDoc(doc(db,'ep_ac',id));showToast('Unidade removida');
+};
+
+const brandColors=['#3D8EF0','#2ECC8A','#F0A633','#E05C6A','#9B6CF0','#F06B3D','#0BBCD4'];
+function brandColor(brand){
+  let h=0;for(let c of brand)h=(h*31+c.charCodeAt(0))%brandColors.length;
+  return brandColors[h];
+}
+
+function renderAC(){
+  const q=(document.getElementById('acSearch').value||'').toLowerCase();
+  const brands=[...new Set(acItems.map(a=>a.brand).filter(Boolean))];
+  const filtersEl=document.getElementById('acFilters');
+  filtersEl.innerHTML=[{label:'Todos',val:'all'},...brands.map(b=>({label:b,val:b}))].map(f=>
+    `<button class="fpill ${acBrandFilter===f.val?'active':''}" onclick="setACFilter('${f.val}')">${f.label}</button>`).join('');
+  let list=acItems.filter(a=>{
+    if(acBrandFilter!=='all'&&a.brand!==acBrandFilter)return false;
+    if(q&&!((a.brand||'').toLowerCase().includes(q)||(a.model||'').toLowerCase().includes(q)||(a.features||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  document.getElementById('acCount').textContent=` (${list.length})`;
+  if(!list.length){document.getElementById('acList').innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="10" rx="2"/><path d="M7 17h10M9 21h6M12 13v4"/></svg><p>Nenhuma unidade AC registada</p></div>`;return;}
+  document.getElementById('acList').innerHTML=list.map(a=>{
+    const bc=brandColor(a.brand||'');
+    const margin=a.buyPrice&&a.sellPrice?((a.sellPrice-a.buyPrice)/a.sellPrice*100).toFixed(0):null;
+    return`<div class="ac-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <span class="ac-brand-tag" style="background:${bc}22;color:${bc}">${esc(a.brand)}</span>
+          <div class="ac-model">${esc(a.model)}</div>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="editAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="icon-btn danger" onclick="deleteAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+        </div>
+      </div>
+      <div class="ac-specs">
+        <span class="spec-pill">${a.btu} BTU</span>
+        <span class="spec-pill">${a.kw?a.kw+' kW':''}</span>
+        <span class="spec-pill">${a.type}</span>
+        <span class="spec-pill">Classe ${a.energyClass}</span>
+        ${(a.features||'').split(',').filter(f=>f.trim()).map(f=>`<span class="spec-pill">${esc(f.trim())}</span>`).join('')}
+      </div>
+      <div class="ac-prices">
+        <div class="ac-price-item"><div class="ac-price-label">Compra</div><div class="ac-price-val">${a.buyPrice?a.buyPrice.toFixed(2)+' €':'—'}</div></div>
+        <div class="ac-price-item"><div class="ac-price-label">Venda</div><div class="ac-price-val">${a.sellPrice?a.sellPrice.toFixed(2)+' €':'—'}</div></div>
+        ${margin?`<div class="ac-price-item"><div class="ac-price-label">Margem</div><div class="ac-price-val green">${margin}%</div></div>`:''}
+      </div>
+      ${a.notes?`<div style="margin-top:8px;font-size:11px;color:var(--text3)">${esc(a.notes)}</div>`:''}
+    </div>`;}).join('');
+}
+
+window.setACFilter=function(val){acBrandFilter=val;renderAC();};
+
+// ---- ORC BUILDER ----
+let currentInstType = 'completa';
+
+const SERVICES_COMPLETA = [
+  '🔧 Abertura de furos para passagem de tubagem para o exterior',
+  '🧹 Limpeza das tubagens com azoto corrido (N₂)',
+  '🔬 Teste de estanquicidade com azoto — 10 bar, 20 bar e 40 bar',
+  '💨 Vácuo entre 200 e 500 microns',
+  '❄️ Abertura de gás',
+  '🌡️ Testes de temperatura em modo frio e modo quente',
+  '✅ Verificação de funcionamento e entrega de relatório'
+];
+const SERVICES_SIMPLES = [
+  '🧹 Limpeza das tubagens com azoto corrido (N₂)',
+  '🔬 Teste de estanquicidade com azoto — 10 bar, 20 bar e 40 bar',
+  '💨 Vácuo entre 200 e 500 microns',
+  '❄️ Abertura de gás',
+  '🌡️ Testes de temperatura em modo frio e modo quente',
+  '✅ Verificação de funcionamento e entrega de relatório'
+];
+
+window.setInstType = function(type, el){
+  currentInstType = type;
+  document.querySelectorAll('.inst-type-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  updateServicesList();
+};
+
+function updateServicesList(){
+  const services = currentInstType==='completa' ? SERVICES_COMPLETA : SERVICES_SIMPLES;
+  document.getElementById('servicesList').innerHTML = services.map(s=>`<div>✦ ${s.replace(/^[^\s]+\s/,'')}</div>`).join('');
+}
+
+window.toggleGasPrice = function(){
+  const checked = document.getElementById('orcAddGas').checked;
+  document.getElementById('orcGasPrice').style.display = checked?'block':'none';
+  calcOrcTotal();
+};
+
+window.toggleReportGas = function(){
+  document.getElementById('rGasFields').style.display = document.getElementById('rGasAdded').checked?'block':'none';
+};
+
+window.openOrcBuilder=function(){
+  clearOrcForm();
+  const sel=document.getElementById('orcAcSelect');
+  sel.innerHTML='<option value="">— Selecionar unidade —</option>'+acItems.map(a=>`<option value="${a.id}">${a.brand} ${a.model} — ${a.btu} BTU (${a.sellPrice?a.sellPrice.toFixed(2)+' €':'s/preço'})</option>`).join('');
+  orcStockLines=[];
+  renderOrcStockLines();
+  calcOrcTotal();
+  updateServicesList();
+  openModal('orcModal');
+};
+
+function clearOrcForm(){
+  ['orcClient','orcAddress','orcNotes','orcLabour','orcTravel','orcGasPrice','orcTubeLength'].forEach(id=>document.getElementById(id).value='');
+  currentOrcAcPrice=0;
+  currentInstType='completa';
+  document.getElementById('orcAcInfo').innerHTML='';
+  document.getElementById('orcAddGas').checked=false;
+  document.getElementById('orcGasPrice').style.display='none';
+  document.getElementById('instTypeCompleta').classList.add('active');
+  document.getElementById('instTypeSimples').classList.remove('active');
+}
+
+window.updateOrcAcPrice=function(){
+  const id=document.getElementById('orcAcSelect').value;
+  const a=acItems.find(x=>x.id===id);
+  if(a){
+    currentOrcAcPrice=a.sellPrice||0;
+    document.getElementById('orcAcInfo').innerHTML=`<span style="color:var(--accent);font-weight:600">${a.sellPrice?a.sellPrice.toFixed(2)+' €':'s/preço'}</span> · ${a.btu} BTU · Classe ${a.energyClass}`;
+  }else{currentOrcAcPrice=0;document.getElementById('orcAcInfo').innerHTML='';}
+  calcOrcTotal();
+};
+
+window.addOrcStockLine=function(){
+  orcStockLines.push({stockId:'',qty:1});
+  renderOrcStockLines();
+};
+
+function renderOrcStockLines(){
+  document.getElementById('orcStockItems').innerHTML=orcStockLines.map((l,i)=>`
+    <div class="orc-item-row">
+      <select class="field-select" id="osl-id-${i}" onchange="updateOrcLine(${i})" style="height:32px;font-size:12px;flex:1">
+        <option value="">— Material —</option>
+        ${stockItems.map(s=>`<option value="${s.id}" ${l.stockId===s.id?'selected':''}>${esc(s.name)} (${s.sellPrice?s.sellPrice.toFixed(2)+' €/'+s.unit:'s/preço'})</option>`).join('')}
+      </select>
+      <input class="orc-item-qty" type="number" min="1" value="${l.qty}" id="osl-qty-${i}" oninput="updateOrcLine(${i})" style="width:48px"/>
+      <span class="orc-item-price" id="osl-price-${i}">${calcLinePrice(l)}</span>
+      <button onclick="removeOrcLine(${i})" style="width:26px;height:26px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:16px">×</button>
+    </div>`).join('');
+}
+
+function calcLinePrice(l){
+  const s=stockItems.find(x=>x.id===l.stockId);
+  if(!s||!s.sellPrice)return'—';
+  return(s.sellPrice*l.qty).toFixed(2)+' €';
+}
+
+window.updateOrcLine=function(i){
+  orcStockLines[i].stockId=document.getElementById(`osl-id-${i}`).value;
+  orcStockLines[i].qty=parseFloat(document.getElementById(`osl-qty-${i}`).value)||1;
+  const price=calcLinePrice(orcStockLines[i]);
+  document.getElementById(`osl-price-${i}`).textContent=price;
+  calcOrcTotal();
+};
+
+window.removeOrcLine=function(i){
+  orcStockLines.splice(i,1);renderOrcStockLines();calcOrcTotal();
+};
+
+window.calcOrcTotal=function(){
+  const labour=parseFloat(document.getElementById('orcLabour').value)||0;
+  const travel=parseFloat(document.getElementById('orcTravel').value)||0;
+  const gasAdded=document.getElementById('orcAddGas').checked;
+  const gas=gasAdded?parseFloat(document.getElementById('orcGasPrice').value)||0:0;
+  const stockTotal=orcStockLines.reduce((acc,l)=>{
+    const s=stockItems.find(x=>x.id===l.stockId);
+    return acc+(s&&s.sellPrice?s.sellPrice*l.qty:0);
+  },0);
+  const subtotal=currentOrcAcPrice+stockTotal+labour+travel+gas;
+  const iva=subtotal*0.23;
+  const total=subtotal+iva;
+  document.getElementById('orcSubtotal').textContent=subtotal.toFixed(2)+' €';
+  document.getElementById('orcIva').textContent=iva.toFixed(2)+' €';
+  document.getElementById('orcTotalVal').textContent=total.toFixed(2)+' €';
+};
+
+window.saveOrc=async function(){
+  const client=document.getElementById('orcClient').value.trim();
+  if(!client){showToast('Introduz o nome do cliente');return;}
+  const acId=document.getElementById('orcAcSelect').value;
+  const acUnit=acItems.find(x=>x.id===acId)||null;
+  const labour=parseFloat(document.getElementById('orcLabour').value)||0;
+  const travel=parseFloat(document.getElementById('orcTravel').value)||0;
+  const gasAdded=document.getElementById('orcAddGas').checked;
+  const gasPrice=gasAdded?parseFloat(document.getElementById('orcGasPrice').value)||0:0;
+  const tubeLength=parseFloat(document.getElementById('orcTubeLength').value)||0;
+  const stockLines=orcStockLines.map(l=>{
+    const s=stockItems.find(x=>x.id===l.stockId);
+    return s?{name:s.name,qty:l.qty,unit:s.unit||'un',price:s.sellPrice||0,total:(s.sellPrice||0)*l.qty}:null;
+  }).filter(Boolean);
+  const stockTotal=stockLines.reduce((a,l)=>a+l.total,0);
+  const acPrice=acUnit?acUnit.sellPrice||0:0;
+  const subtotal=acPrice+stockTotal+labour+travel+gasPrice;
+  const iva=subtotal*0.23;
+  const total=subtotal+iva;
+  const services=currentInstType==='completa'?SERVICES_COMPLETA:SERVICES_SIMPLES;
+  const data={
+    client,
+    address:document.getElementById('orcAddress').value.trim(),
+    notes:document.getElementById('orcNotes').value.trim(),
+    instType:currentInstType,
+    services,
+    tubeLength,
+    gasAdded,gasPrice,
+    acUnit:acUnit?{brand:acUnit.brand,model:acUnit.model,btu:acUnit.btu,type:acUnit.type,energyClass:acUnit.energyClass,price:acPrice}:null,
+    stockLines,labour,travel,subtotal,iva,total,
+    date:new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'}),
+    createdAt:serverTimestamp()
+  };
+  await addDoc(collection(db,'ep_orc'),data);
+  closeModal('orcModal');showToast('Orçamento guardado ✓');
+};
+
+// ---- ORC LIST ----
+function renderOrc(){
+  document.getElementById('orcCount').textContent=` (${orcamentos.length})`;
+  if(!orcamentos.length){document.getElementById('orcList').innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhum orçamento ainda</p></div>`;return;}
+  document.getElementById('orcList').innerHTML=orcamentos.map(o=>`
+    <div class="orc-card">
+      <div class="orc-header">
+        <div>
+          <div class="orc-name">${esc(o.client)}</div>
+          <div class="orc-date">${o.address?esc(o.address)+' · ':''} ${o.date||''}</div>
+          ${o.instType?`<div style="margin-top:4px"><span class="badge badge-cat">${o.instType==='completa'?'Instalação completa':'Instalação simples'}</span>${o.tubeLength?`<span class="badge badge-cat" style="margin-left:4px">Tubagem: ${o.tubeLength}m</span>`:''}</div>`:''}
+        </div>
+        <div>
+          <div class="orc-total-label">Total c/ IVA</div>
+          <div class="orc-total">${o.total?o.total.toFixed(2)+' €':'—'}</div>
+        </div>
+      </div>
+      ${o.acUnit?`<div style="font-size:12px;color:var(--text2);margin-top:6px">❄️ ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · ${o.acUnit.energyClass||''}</div>`:''}
+      ${o.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(o.notes)}</div>`:''}
+      <div class="orc-footer">
+        <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Apagar</button>
+        <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Relatório</button>
+        <button class="orc-btn primary" onclick="showPdf('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+      </div>
+    </div>`).join('');
+}
+
+window.deleteOrc=async function(id){
+  if(!confirm('Apagar este orçamento?'))return;
+  await deleteDoc(doc(db,'ep_orc',id));showToast('Orçamento apagado');
+};
+
+// ---- REPORT ----
+let currentReportOrcId = null;
+
+window.openReport = function(id){
+  currentReportOrcId = id;
+  const o = orcamentos.find(x=>x.id===id);
+  if(!o) return;
+  document.getElementById('reportClientLabel').textContent = `Cliente: ${o.client} · ${o.date||''}`;
+  // reset fields
+  ['rp10time','rp20time','rp40time','rVacuumTime','rGasQty','rObservations','rAmbient','rColdIn','rColdOut','rHotIn','rHotOut','rVacuum'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rGasAdded').checked=false;
+  document.getElementById('rGasFields').style.display='none';
+  document.getElementById('rp10').value='OK ✓';
+  document.getElementById('rp20').value='OK ✓';
+  document.getElementById('rp40').value='OK ✓';
+  openModal('reportModal');
+};
+
+window.saveAndShowReport = async function(){
+  const o = orcamentos.find(x=>x.id===currentReportOrcId);
+  if(!o) return;
+  const reportData = {
+    p10: document.getElementById('rp10').value,
+    p10time: document.getElementById('rp10time').value,
+    p20: document.getElementById('rp20').value,
+    p20time: document.getElementById('rp20time').value,
+    p40: document.getElementById('rp40').value,
+    p40time: document.getElementById('rp40time').value,
+    vacuum: document.getElementById('rVacuum').value,
+    vacuumTime: document.getElementById('rVacuumTime').value,
+    gasAdded: document.getElementById('rGasAdded').checked,
+    gasQty: document.getElementById('rGasQty').value,
+    gasType: document.getElementById('rGasType')?.value||'R32',
+    coldIn: document.getElementById('rColdIn').value,
+    coldOut: document.getElementById('rColdOut').value,
+    hotIn: document.getElementById('rHotIn').value,
+    hotOut: document.getElementById('rHotOut').value,
+    ambient: document.getElementById('rAmbient').value,
+    observations: document.getElementById('rObservations').value,
+    reportDate: new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'})
+  };
+  await updateDoc(doc(db,'ep_orc',currentReportOrcId),{report:reportData});
+  closeModal('reportModal');
+  showReportPdf(o, reportData);
+};
+
+function showReportPdf(o, r){
+  const content = `
+    <div class="pdf-preview" id="pdfContent">
+      <div class="pdf-header">
+        <div>
+          <div class="pdf-brand">Sun<span>Volt</span></div>
+          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira · TRIESP · DGEG</div>
+        </div>
+        <div class="pdf-meta">
+          <div style="font-weight:700;font-size:13px">RELATÓRIO DE INSTALAÇÃO</div>
+          <div>Data: ${r.reportDate}</div>
+          <div>Ref: REL-${o.id.slice(-5).toUpperCase()}</div>
+        </div>
+      </div>
+      <div class="pdf-client">
+        <div class="pdf-client-label">Cliente</div>
+        <div class="pdf-client-name">${esc(o.client)}</div>
+        ${o.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(o.address)}</div>`:''}
+      </div>
+      ${o.acUnit?`<div style="margin-bottom:14px;padding:10px;background:#f0f7ff;border-radius:8px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:2px">Unidade instalada</div>
+        <div style="color:#444">${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} · ${o.acUnit.btu} BTU · Classe ${o.acUnit.energyClass||'—'} · ${o.instType==='completa'?'Instalação completa':'Instalação simples'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
+      </div>`:''}
+
+      <table class="pdf-table">
+        <thead><tr><th>Teste</th><th>Pressão</th><th>Tempo</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Estanquicidade c/ N₂</td><td>10 bar</td><td>${r.p10time||'—'}</td><td style="color:${r.p10.includes('OK')?'#1a7a50':'#c0392b'};font-weight:700">${r.p10}</td></tr>
+          <tr><td>Estanquicidade c/ N₂</td><td>20 bar</td><td>${r.p20time||'—'}</td><td style="color:${r.p20.includes('OK')?'#1a7a50':'#c0392b'};font-weight:700">${r.p20}</td></tr>
+          <tr><td>Estanquicidade c/ N₂</td><td>40 bar</td><td>${r.p40time||'—'}</td><td style="color:${r.p40.includes('OK')?'#1a7a50':'#c0392b'};font-weight:700">${r.p40}</td></tr>
+          <tr><td>Vácuo</td><td>${r.vacuum?r.vacuum+' microns':'—'}</td><td>${r.vacuumTime||'—'}</td><td style="color:#1a7a50;font-weight:700">${r.vacuum&&r.vacuum>=200&&r.vacuum<=500?'OK ✓':'Verificar'}</td></tr>
+        </tbody>
+      </table>
+
+      ${r.gasAdded?`<div style="margin-bottom:14px;padding:10px;background:#fff8e8;border-radius:8px;font-size:12px;border:1px solid #f0c060">
+        <div style="font-weight:600;margin-bottom:2px">⚠️ Carga de gás adicional</div>
+        <div style="color:#7a5500">Adicionados ${r.gasQty||'—'} g de ${r.gasType} por comprimento de tubagem superior a 5m</div>
+      </div>`:''}
+
+      <table class="pdf-table">
+        <thead><tr><th>Teste de temperatura</th><th>Insuflação</th><th>Retorno</th><th>Δ Temp</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Modo frio (T. ambiente: ${r.ambient||'—'}°C)</td>
+            <td>${r.coldIn?r.coldIn+'°C':'—'}</td>
+            <td>${r.coldOut?r.coldOut+'°C':'—'}</td>
+            <td style="font-weight:700">${r.coldIn&&r.coldOut?Math.abs(r.coldOut-r.coldIn).toFixed(1)+'°C':'—'}</td>
+          </tr>
+          <tr>
+            <td>Modo quente</td>
+            <td>${r.hotIn?r.hotIn+'°C':'—'}</td>
+            <td>${r.hotOut?r.hotOut+'°C':'—'}</td>
+            <td style="font-weight:700">${r.hotIn&&r.hotOut?Math.abs(r.hotIn-r.hotOut).toFixed(1)+'°C':'—'}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      ${r.observations?`<div style="margin-bottom:14px;padding:10px;background:#f5f7fa;border-radius:8px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:4px">Observações</div>
+        <div style="color:#444">${esc(r.observations)}</div>
+      </div>`:''}
+
+      <div style="margin-top:16px;padding:12px;background:#e8f5ee;border-radius:8px;font-size:12px;text-align:center;color:#1a7a50;font-weight:600">
+        ✅ Instalação concluída e testada com sucesso — Unidade em funcionamento normal
+      </div>
+      <div class="pdf-footer" style="margin-top:14px">Bruno Sequeira · Eletricista TRIESP · DGEG · ${r.reportDate}</div>
+    </div>`;
+
+  document.getElementById('pdfPreviewArea').innerHTML = content;
+  openModal('pdfModal');
+}
+
+// ---- PDF ----
+window.showPdf=function(id){
+  const o=orcamentos.find(x=>x.id===id);if(!o)return;
+  const rows=[
+    ...(o.acUnit?[`<tr><td>${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · Classe ${o.acUnit.energyClass||''}</td><td>1</td><td>un</td><td>${(o.acUnit.price||0).toFixed(2)} €</td></tr>`]:[]),
+    ...(o.stockLines||[]).map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${l.unit}</td><td>${l.total.toFixed(2)} €</td></tr>`),
+    o.labour?`<tr><td>Mão de obra / Instalação</td><td>1</td><td>vg</td><td>${o.labour.toFixed(2)} €</td></tr>`:'',
+    o.travel?`<tr><td>Deslocação</td><td>1</td><td>vg</td><td>${o.travel.toFixed(2)} €</td></tr>`:'',
+    o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás adicional (tubagem &gt; 5m)</td><td>1</td><td>vg</td><td>${o.gasPrice.toFixed(2)} €</td></tr>`:'',
+  ].filter(Boolean).join('');
+
+  const servicesHtml = (o.services||[]).map(s=>`<div style="font-size:11px;color:#444;padding:2px 0">✦ ${s.replace(/^[^\s]+\s/,'')}</div>`).join('');
+
+  document.getElementById('pdfPreviewArea').innerHTML=`
+    <div class="pdf-preview" id="pdfContent">
+      <div class="pdf-header">
+        <div>
+          <div class="pdf-brand">Sun<span>Volt</span></div>
+          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira · TRIESP · DGEG</div>
+        </div>
+        <div class="pdf-meta">
+          <div style="font-weight:700">ORÇAMENTO</div>
+          <div>Data: ${o.date||'—'}</div>
+          <div>Ref: ORC-${o.id.slice(-5).toUpperCase()}</div>
+        </div>
+      </div>
+      <div class="pdf-client">
+        <div class="pdf-client-label">Cliente</div>
+        <div class="pdf-client-name">${esc(o.client)}</div>
+        ${o.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(o.address)}</div>`:''}
+      </div>
+      ${o.notes?`<div style="font-size:11px;color:#555;margin-bottom:12px;font-style:italic">${esc(o.notes)}</div>`:''}
+
+      ${o.instType?`<div style="margin-bottom:14px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:6px">Tipo de serviço</div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">${o.instType==='completa'?'Instalação completa (com furos para exterior)':'Instalação simples (pré-instalação existente)'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
+        <div style="padding:10px;background:#f5f7fa;border-radius:8px">${servicesHtml}</div>
+      </div>`:''}
+
+      <table class="pdf-table">
+        <thead><tr><th>Descrição</th><th>Qtd</th><th>Un</th><th>Valor</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="pdf-totals">
+        <div class="pdf-tot-row"><span>Subtotal (s/ IVA)</span><span>${(o.subtotal||0).toFixed(2)} €</span></div>
+        <div class="pdf-tot-row"><span>IVA 23%</span><span>${(o.iva||0).toFixed(2)} €</span></div>
+        <div class="pdf-tot-row final"><span>TOTAL</span><span>${(o.total||0).toFixed(2)} €</span></div>
+      </div>
+      <div class="pdf-footer">Orçamento válido por 30 dias · Obrigado pela preferência</div>
+    </div>`;
+  openModal('pdfModal');
+};
+
+window.printPdf=function(){
+  const content=document.getElementById('pdfContent').outerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Orçamento</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
+  <style>body{margin:20px;font-family:'Inter',sans-serif}${document.querySelector('style').textContent}</style>
+  </head><body onload="window.print()">${content}</body></html>`);
+  w.document.close();
+};
+
+// ---- UTILS ----
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+window.showToast=function(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+};
+</script>
+</body>
+</html>

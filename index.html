@@ -247,7 +247,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 
 <!-- MODE SELECTOR -->
 <div id="modeScreen">
-  <div class="mode-logo">Sun<span>Volt</span></div>
+  <div class="mode-logo">Sun<span>Volt</span></div><div style="font-size:14px;color:var(--text3);margin-top:4px;font-family:'Space Grotesk',sans-serif;letter-spacing:.5px">Climatização</div>
   <p class="mode-sub">Como queres usar a app?</p>
   <div class="mode-cards">
     <div class="mode-card" onclick="setMode('mobile')">
@@ -268,7 +268,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 
 <!-- CONFIG -->
 <div id="configScreen">
-  <div class="brand-logo">Sun<span>Volt</span></div>
+  <div class="brand-logo">Sun<span>Volt</span></div><div style="font-size:14px;color:var(--text3);margin-bottom:6px;font-family:'Space Grotesk',sans-serif;letter-spacing:.5px">Climatização</div>
   <p class="cfg-sub">Liga ao Firebase para aceder<br/>em todos os teus dispositivos.</p>
   <label class="cfg-label">Firebase API Key</label>
   <input class="cfg-input" id="cfgKey" placeholder="AIzaSy..." autocomplete="off" spellcheck="false"/>
@@ -285,7 +285,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
   <!-- DESKTOP SIDEBAR -->
   <div class="desktop-sidebar" id="desktopSidebar" style="display:none">
     <div style="padding:28px 24px 20px;border-bottom:1px solid var(--border)">
-      <div class="app-brand" style="font-size:22px;font-weight:700;letter-spacing:-.5px">Sun<span style="color:var(--accent)">Volt</span></div>
+      <div class="app-brand" style="font-size:22px;font-weight:700;letter-spacing:-.5px">Sun<span style="color:var(--accent)">Volt</span></div><div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:'Space Grotesk',sans-serif;letter-spacing:.8px;text-transform:uppercase">Climatização</div>
     </div>
     <div class="desktop-nav">
       <button class="desktop-nav-btn active" id="dnav-stock" onclick="setTabDesktop('stock',this)">
@@ -334,7 +334,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 
   <!-- MOBILE HEADER -->
   <div class="app-header" id="mobileHeader">
-    <div class="app-brand">Sun<span>Volt</span></div>
+    <div><div class="app-brand">Sun<span>Volt</span></div><div style="font-size:10px;color:var(--text3);font-family:'Space Grotesk',sans-serif;letter-spacing:.8px;text-transform:uppercase;margin-top:1px">Climatização</div></div>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="sync-dot" id="syncDotMobile"></div>
       <div class="header-badge" id="headerBadge">Bruno Sequeira</div>
@@ -1531,8 +1531,11 @@ function showReportPdf(o, r){
     <div class="pdf-preview" id="pdfContent">
       <div class="pdf-header">
         <div>
-          <div class="pdf-brand">Sun<span>Volt</span></div>
-          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira · TRIESP · DGEG</div>
+          <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
+          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira</div>
+          <div style="font-size:11px;color:#777;margin-top:2px">📍 Covilhã / Aveiro</div>
+          <div style="font-size:11px;color:#777;margin-top:1px">📞 968 184 169</div>
+          <div style="font-size:11px;color:#777;margin-top:1px">✉️ sunvoltportugal@gmail.com</div>
         </div>
         <div class="pdf-meta">
           <div style="font-weight:700;font-size:13px">RELATÓRIO DE INSTALAÇÃO</div>
@@ -1622,7 +1625,7 @@ function showReportPdf(o, r){
       <div style="margin-top:16px;padding:12px;background:#e8f5ee;border-radius:8px;font-size:12px;text-align:center;color:#1a7a50;font-weight:600">
         ✅ Instalação concluída e testada com sucesso — Unidade em funcionamento normal
       </div>
-      <div class="pdf-footer" style="margin-top:14px">Bruno Sequeira · Eletricista TRIESP · DGEG · ${r.reportDate}</div>
+      <div class="pdf-footer" style="margin-top:14px">Bruno Sequeira · SunVolt Climatização · 968 184 169 · sunvoltportugal@gmail.com · ${r.reportDate}</div>
     </div>`;
 
   document.getElementById('pdfPreviewArea').innerHTML = content;
@@ -1651,8 +1654,11 @@ window.showPdf=function(id){
     <div class="pdf-preview" id="pdfContent">
       <div class="pdf-header">
         <div>
-          <div class="pdf-brand">Sun<span>Volt</span></div>
-          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira · TRIESP · DGEG</div>
+          <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
+          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira</div>
+          <div style="font-size:11px;color:#777;margin-top:2px">📍 Covilhã / Aveiro</div>
+          <div style="font-size:11px;color:#777;margin-top:1px">📞 968 184 169</div>
+          <div style="font-size:11px;color:#777;margin-top:1px">✉️ sunvoltportugal@gmail.com</div>
         </div>
         <div class="pdf-meta">
           <div style="font-weight:700">ORÇAMENTO</div>
@@ -1727,7 +1733,7 @@ window.shareWhatsApp = function(){
     `Ref: ${currentPdfRef}\n\n` +
     (currentPdfType==='report'
       ? `✅ Instalação concluída e testada com sucesso.\nPara receber o relatório completo com fotos, contacte-nos.`
-      : `Para mais informações sobre este orçamento, contacte-nos.\n\n_Bruno Sequeira · TRIESP · DGEG_`)
+      : `Para mais informações sobre este orçamento, contacte-nos.\n\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169 · sunvoltportugal@gmail.com_`)
   );
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 };

@@ -466,20 +466,26 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
         <input class="field-input" id="acModel" placeholder="Ex: TSN/TSG-09R32"/>
       </div>
     </div>
-
     <div class="field-row">
+      <div>
+        <label class="field-label">Série / Família</label>
+        <input class="field-input" id="acSeries" placeholder="Ex: SORA+, UMI, Erai Black, Comfee..."/>
+      </div>
       <div>
         <label class="field-label">Tipo</label>
         <select class="field-select" id="acType">
           <option>Mono Split</option><option>Multi Split</option><option>Cassete</option><option>Ducted</option><option>Portátil</option>
         </select>
       </div>
+    </div>
+    <div class="field-row" style="margin-top:0">
       <div>
         <label class="field-label">BTU nominal</label>
         <select class="field-select" id="acBtu">
           <option>9000</option><option>12000</option><option>18000</option><option>24000</option><option>36000</option>
         </select>
       </div>
+      <div></div>
     </div>
 
     <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;margin-top:14px;margin-bottom:4px">
@@ -1111,12 +1117,13 @@ window.renderDesktop=function(){
     const brands=[...new Set(acItems.map(a=>a.brand).filter(Boolean))];
     // Filter row 2: Series/model family
     const SERIES_KEYWORDS = ['SORA','UMI','Erai Black','Erai','YUKI','Consola','Comfee'];
-    const detectSeries = (model) => {
+    const detectSeries = (model, series) => {
+      if(series && series.trim()) return series.trim();
       if((model||'').includes('Black')) return 'Erai Black';
       for(const k of SERIES_KEYWORDS) if((model||'').toUpperCase().includes(k.toUpperCase())) return k;
       return 'Outros';
     };
-    const allSeries = [...new Set(acItems.map(a=>detectSeries(a.model)))].sort();
+    const allSeries = [...new Set(acItems.map(a=>detectSeries(a.model, a.series)))].sort();
 
     filtersEl.innerHTML = `
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
@@ -1135,12 +1142,12 @@ window.renderDesktop=function(){
 
     let items=acItems.filter(a=>{
       if(acBrandFilter!=='all'&&a.brand!==acBrandFilter)return false;
-      if(acSeriesFilter!=='all'&&detectSeries(a.model)!==acSeriesFilter)return false;
+      if(acSeriesFilter!=='all'&&detectSeries(a.model, a.series)!==acSeriesFilter)return false;
       if(q&&!((a.brand||'').toLowerCase().includes(q)||(a.model||'').toLowerCase().includes(q)))return false;
       return true;
     }).sort((a,b)=>{
       const SERIES_ORDER = ['SORA','UMI','Erai Black','Erai','YUKI','Consola','Comfee','Outros'];
-      const sa = SERIES_ORDER.indexOf(detectSeries(a.model));
+      const sa = SERIES_ORDER.indexOf(detectSeries(a.model, a.series));
       const sb = SERIES_ORDER.indexOf(detectSeries(b.model));
       if(sa!==sb) return (sa===-1?99:sa)-(sb===-1?99:sb);
       return (a.buyPrice||0)-(b.buyPrice||0);
@@ -1166,8 +1173,8 @@ window.renderDesktop=function(){
         const bc=brandColor(a.brand||'');
         const consult=(a.sellPrice||0)-(a.buyPrice||0);
         const venda=a.sellPrice||0;
-        const series=detectSeries(a.model);
-        const prevSeries=i>0?detectSeries(items[i-1].model):null;
+        const series=detectSeries(a.model, a.series);
+        const prevSeries=i>0?detectSeries(items[i-1].model, items[i-1].series):null;
         const seriesHeader=series!==prevSeries?`<tr style="background:var(--surface3)"><td colspan="11" style="padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)">${series}</td></tr>`:'';
         return seriesHeader+`<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
           <td style="padding:10px 12px">
@@ -1345,6 +1352,7 @@ window.saveAC=async function(){
   const data={
     brand:document.getElementById('acBrand').value.trim(),
     model:document.getElementById('acModel').value.trim(),
+    series:document.getElementById('acSeries').value.trim(),
     btu:document.getElementById('acBtu').value,
     type:document.getElementById('acType').value,
     coolKw:parseFloat(document.getElementById('acCoolKw').value)||0,
@@ -1375,7 +1383,7 @@ window.saveAC=async function(){
 };
 
 function clearACForm(){
-  ['acEditId','acBrand','acModel','acCoolKw','acSeer','acCoolInput','acHeatBtu','acHeatKw','acScop',
+  ['acEditId','acBrand','acModel','acSeries','acCoolKw','acSeer','acCoolInput','acHeatBtu','acHeatKw','acScop',
    'acPipeLiq','acPipeGas','acPipeDrain','acFeatures','acListPrice','acDiscount','acBuyPrice','acMargin','acSellPrice','acNotes'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
@@ -1388,6 +1396,7 @@ window.editAC=function(id){
   document.getElementById('acEditId').value=id;
   document.getElementById('acBrand').value=a.brand||'';
   document.getElementById('acModel').value=a.model||'';
+  document.getElementById('acSeries').value=a.series||'';
   document.getElementById('acBtu').value=a.btu||'9000';
   document.getElementById('acType').value=a.type||'Mono Split';
   document.getElementById('acCoolKw').value=a.coolKw||a.kw||'';
@@ -2094,10 +2103,10 @@ window.seedACUnitsIfEmpty = async function(){
     {brand:"Toyotomi",model:"CTN/CTG-356BV Erai Black",btu:"18000",type:"Mono Split",coolKw:5.10,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1350,discount:40,buyPrice:810.00,margin:m,sellPrice:calc(810.00),features:"Inverter, R32, Erai, Wi-Fi, Black"},
     {brand:"Toyotomi",model:"CTN/CTG-371BV Erai Black",btu:"24000",type:"Mono Split",coolKw:6.50,classCool:"A++",classHeat:"A+++",gasType:"R32",listPrice:1650,discount:40,buyPrice:990.00,margin:m,sellPrice:calc(990.00),features:"Inverter, R32, Erai, Wi-Fi, Black"},
     // MIDEA COMFEE
-    {brand:"Midea Comfee",model:"MSAFAU-09HRDN8",btu:"9000",type:"Mono Split",coolKw:2.64,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:265.00,margin:m,sellPrice:calc(265.00),features:"Inverter, R32"},
-    {brand:"Midea Comfee",model:"MSAFAU-12HRDN8",btu:"12000",type:"Mono Split",coolKw:3.52,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:295.00,margin:m,sellPrice:calc(295.00),features:"Inverter, R32"},
-    {brand:"Midea Comfee",model:"MSAFAU-18HRDN8",btu:"18000",type:"Mono Split",coolKw:5.27,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:473.00,margin:m,sellPrice:calc(473.00),features:"Inverter, R32"},
-    {brand:"Midea Comfee",model:"MSAFAU-24HRDN8",btu:"24000",type:"Mono Split",coolKw:7.03,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:576.00,margin:m,sellPrice:calc(576.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-09HRDN8",series:"Comfee",btu:"9000",type:"Mono Split",coolKw:2.64,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:265.00,margin:m,sellPrice:calc(265.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-12HRDN8",series:"Comfee",btu:"12000",type:"Mono Split",coolKw:3.52,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:295.00,margin:m,sellPrice:calc(295.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-18HRDN8",series:"Comfee",btu:"18000",type:"Mono Split",coolKw:5.27,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:473.00,margin:m,sellPrice:calc(473.00),features:"Inverter, R32"},
+    {brand:"Midea Comfee",model:"MSAFAU-24HRDN8",series:"Comfee",btu:"24000",type:"Mono Split",coolKw:7.03,classCool:"A++",classHeat:"A++",gasType:"R32",listPrice:0,discount:0,buyPrice:576.00,margin:m,sellPrice:calc(576.00),features:"Inverter, R32"},
   ];
   showToast('A adicionar ' + units.length + ' unidades...');
   let count = 0;

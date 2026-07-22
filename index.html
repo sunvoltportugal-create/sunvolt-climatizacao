@@ -2084,7 +2084,7 @@ window.showToast=function(msg){
 // ---- SEED AC UNITS ----
 window.seedACUnitsIfEmpty = async function(){
   if(acItems.length > 0){ showToast('Catálogo já tem '+acItems.length+' unidades'); return; }
-  const m = 15; // margem 15%
+  const m = 10; // margem 10%
   const calc = (buy) => parseFloat((buy / (1 - m/100)).toFixed(2));
   const units = [
     // TOYOTOMI SORA+

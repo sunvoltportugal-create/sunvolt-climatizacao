@@ -658,20 +658,17 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     </div>
 
     <div class="orc-section">
-      <div class="orc-sec-title">Unidade AC selecionada</div>
-      <select class="field-select" id="orcAcSelect" onchange="updateOrcAcPrice()">
-        <option value="">— Selecionar unidade (opcional) —</option>
-      </select>
-      <div id="orcAcInfo" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+      <div class="orc-sec-title">Unidades AC</div>
+      <div id="orcAcLines"></div>
+      <button onclick="addOrcAcLine()" style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">+ Adicionar unidade AC</button>
       <div id="orcConsultRow" style="display:none;margin-top:10px;background:var(--accent-light);border-radius:var(--radius-sm);padding:10px;border:1px solid rgba(61,142,240,.2)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text)">Taxa de serviço/consultoria</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Margem sobre a unidade AC (entra no recibo verde)</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">Taxa de serviço/consultoria total</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Margem sobre todas as unidades AC</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:18px;font-weight:700;color:var(--accent)" id="orcConsultVal">0.00 €</div>
-            <div style="font-size:10px;color:var(--text3)" id="orcConsultPct"></div>
           </div>
         </div>
       </div>
@@ -703,10 +700,9 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     </div>
 
     <div class="orc-total-bar">
-      <div class="orc-total-row"><span>Subtotal (s/ IVA)</span><span id="orcSubtotal">0.00 €</span></div>
-      <div class="orc-total-row"><span>IVA 23%</span><span id="orcIva">0.00 €</span></div>
-      <hr class="divider"/>
-      <div class="orc-total-row big"><span>Total</span><span id="orcTotalVal">0.00 €</span></div>
+      <div class="orc-total-row" id="orcSubtotalRow" style="display:none"><span>Subtotal (s/ IVA)</span><span id="orcSubtotal">0.00 €</span></div>
+      <div class="orc-total-row" id="orcIvaRow" style="display:none"><span>IVA 23%</span><span id="orcIva">0.00 €</span></div>
+      <div class="orc-total-row big"><span>Total (IVA incluído)</span><span id="orcTotalVal">0.00 €</span></div>
     </div>
 
     <div class="modal-actions">
@@ -1213,7 +1209,7 @@ window.renderDesktop=function(){
           ${o.instType?`<div style="margin-top:4px"><span class="badge badge-cat">${o.instType==='completa'?'Instalação completa':'Instalação simples'}</span></div>`:''}</div>
           <div><div class="orc-total-label">Total c/ IVA</div><div class="orc-total">${o.total?o.total.toFixed(2)+' €':'—'}</div></div>
         </div>
-        ${o.acUnit?`<div style="font-size:12px;color:var(--text2);margin-top:6px">❄️ ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU</div>`:''}
+        ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`<div style="font-size:12px;color:var(--text2);margin-top:4px">❄️ ${esc(u.brand)} ${esc(u.model)} — ${u.btu} BTU${u.qty>1?' ×'+u.qty:''}</div>`).join('')}
         <div class="orc-footer">
           <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
           <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Relatório</button>
@@ -1530,10 +1526,77 @@ window.toggleReportGas = function(){
   document.getElementById('rGasFields').style.display = document.getElementById('rGasAdded').checked?'block':'none';
 };
 
+// Multi-machine AC lines
+let orcAcLines = [];
+
+window.addOrcAcLine = function(){
+  orcAcLines.push({acId:'', qty:1});
+  renderOrcAcLines();
+};
+
+window.removeOrcAcLine = function(i){
+  orcAcLines.splice(i,1);
+  renderOrcAcLines();
+  calcOrcTotal();
+};
+
+window.updateOrcAcLine = function(i){
+  const idEl=document.getElementById(`oac-id-${i}`);
+  const qtyEl=document.getElementById(`oac-qty-${i}`);
+  if(idEl) orcAcLines[i].acId=idEl.value;
+  if(qtyEl) orcAcLines[i].qty=parseInt(qtyEl.value)||1;
+  renderOrcAcLineInfo(i);
+  updateConsultTotal();
+  calcOrcTotal();
+};
+
+function renderOrcAcLineInfo(i){
+  const a=acItems.find(x=>x.id===orcAcLines[i].acId);
+  const infoEl=document.getElementById(`oac-info-${i}`);
+  if(!infoEl) return;
+  if(a){
+    const consult=((a.sellPrice||0)-(a.buyPrice||0))*orcAcLines[i].qty;
+    infoEl.innerHTML=`<span style="color:var(--text2);font-size:11px">${a.brand} ${a.model} · ${a.btu} BTU · Compra: ${(a.buyPrice*orcAcLines[i].qty).toFixed(2)} €</span> &nbsp; <span style="color:var(--accent);font-weight:600;font-size:12px">Consultoria: ${consult.toFixed(2)} €</span>`;
+  } else { infoEl.innerHTML=''; }
+}
+
+function renderOrcAcLines(){
+  const container=document.getElementById('orcAcLines');
+  container.innerHTML=orcAcLines.map((l,i)=>`
+    <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <select class="field-select" id="oac-id-${i}" onchange="updateOrcAcLine(${i})" style="flex:1;height:38px;font-size:13px">
+          <option value="">— Selecionar unidade —</option>
+          ${acItems.map(a=>`<option value="${a.id}" ${l.acId===a.id?'selected':''}>${a.brand} ${a.model} — ${a.btu} BTU (${a.sellPrice?a.sellPrice.toFixed(2)+' €':'s/preço'})</option>`).join('')}
+        </select>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <label style="font-size:11px;color:var(--text3)">Qtd</label>
+          <input type="number" min="1" value="${l.qty}" id="oac-qty-${i}" onchange="updateOrcAcLine(${i})" style="width:48px;height:38px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;text-align:center"/>
+        </div>
+        <button onclick="removeOrcAcLine(${i})" style="width:32px;height:32px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:18px;flex-shrink:0">×</button>
+      </div>
+      <div id="oac-info-${i}" style="font-size:11px;padding:0 2px"></div>
+    </div>`).join('');
+  orcAcLines.forEach((_,i)=>renderOrcAcLineInfo(i));
+  updateConsultTotal();
+}
+
+function updateConsultTotal(){
+  const total=orcAcLines.reduce((sum,l)=>{
+    const a=acItems.find(x=>x.id===l.acId);
+    if(!a) return sum;
+    return sum+((a.sellPrice||0)-(a.buyPrice||0))*l.qty;
+  },0);
+  document.getElementById('orcConsultRow').style.display=total>0?'block':'none';
+  document.getElementById('orcConsultVal').textContent=total.toFixed(2)+' €';
+  currentOrcConsultValue=total;
+  return total;
+}
+
 window.openOrcBuilder=function(){
   clearOrcForm();
-  const sel=document.getElementById('orcAcSelect');
-  sel.innerHTML='<option value="">— Selecionar unidade —</option>'+acItems.map(a=>`<option value="${a.id}">${a.brand} ${a.model} — ${a.btu} BTU (${a.sellPrice?a.sellPrice.toFixed(2)+' €':'s/preço'})</option>`).join('');
+  orcAcLines=[];
+  renderOrcAcLines();
   orcStockLines=[];
   renderOrcStockLines();
   calcOrcTotal();
@@ -1547,35 +1610,13 @@ function clearOrcForm(){
   currentOrcConsultValue=0;
   currentOrcAcMargin=0;
   currentInstType='completa';
-  document.getElementById('orcAcInfo').innerHTML='';
   document.getElementById('orcConsultRow').style.display='none';
   document.getElementById('orcAddGas').checked=false;
   document.getElementById('orcGasPrice').style.display='none';
   document.getElementById('instTypeCompleta').classList.add('active');
   document.getElementById('instTypeSimples').classList.remove('active');
+  orcAcLines=[];
 }
-
-window.updateOrcAcPrice=function(){
-  const id=document.getElementById('orcAcSelect').value;
-  const a=acItems.find(x=>x.id===id);
-  if(a){
-    currentOrcAcPrice=a.buyPrice||0;
-    const consultVal = (a.sellPrice||0)-(a.buyPrice||0);
-    currentOrcConsultValue = consultVal > 0 ? consultVal : 0;
-    currentOrcAcMargin = a.margin||0;
-    document.getElementById('orcAcInfo').innerHTML=
-      `<span style="color:var(--text2);font-size:11px">${a.brand} ${a.model} · ${a.btu} BTU · ${a.classCool||a.energyClass||''}</span><br/>` +
-      `<span style="color:var(--text3);font-size:11px">Preço compra: ${(a.buyPrice||0).toFixed(2)} € · PVP tabela: ${(a.listPrice||0).toFixed(2)} €</span>`;
-    document.getElementById('orcConsultRow').style.display='block';
-    document.getElementById('orcConsultVal').textContent=currentOrcConsultValue.toFixed(2)+' €';
-    document.getElementById('orcConsultPct').textContent='Margem '+currentOrcAcMargin+'% sobre preço de compra';
-  }else{
-    currentOrcAcPrice=0;currentOrcConsultValue=0;currentOrcAcMargin=0;
-    document.getElementById('orcAcInfo').innerHTML='';
-    document.getElementById('orcConsultRow').style.display='none';
-  }
-  calcOrcTotal();
-};
 
 window.addOrcStockLine=function(){
   orcStockLines.push({stockId:'',qty:1});
@@ -1623,36 +1664,54 @@ window.calcOrcTotal=function(){
     const s=stockItems.find(x=>x.id===l.stockId);
     return acc+(s&&s.sellPrice?s.sellPrice*l.qty:0);
   },0);
-  // Subtotal = consultancy fee + stock + labour + travel + consumables + gas
-  const subtotal=currentOrcConsultValue+stockTotal+labour+travel+consumables+gas;
-  const iva=subtotal*0.23;
-  const total=subtotal+iva;
-  document.getElementById('orcSubtotal').textContent=subtotal.toFixed(2)+' €';
-  document.getElementById('orcIva').textContent=iva.toFixed(2)+' €';
+  const consultTotal=updateConsultTotal();
+  // AC buy price (with IVA — fatura fornecedor ao cliente)
+  const acBuyTotal=orcAcLines.reduce((acc,l)=>{
+    const a=acItems.find(x=>x.id===l.acId);
+    return acc+(a?(a.buyPrice||0)*(l.qty||1):0);
+  },0)*1.23;
+  // All other values already include IVA — no extra IVA
+  const total=acBuyTotal+consultTotal+stockTotal+labour+travel+consumables+gas;
+  document.getElementById('orcSubtotal').style.display='none';
+  const ivaRow=document.getElementById('orcIvaRow');
+  if(ivaRow) ivaRow.style.display='none';
   document.getElementById('orcTotalVal').textContent=total.toFixed(2)+' €';
 };
 
 window.saveOrc=async function(){
   const client=document.getElementById('orcClient').value.trim();
   if(!client){showToast('Introduz o nome do cliente');return;}
-  const acId=document.getElementById('orcAcSelect').value;
-  const acUnit=acItems.find(x=>x.id===acId)||null;
+
+  // Build AC units list
+  const acUnits = orcAcLines.filter(l=>l.acId).map(l=>{
+    const a=acItems.find(x=>x.id===l.acId);
+    if(!a) return null;
+    const consult=((a.sellPrice||0)-(a.buyPrice||0))*l.qty;
+    return {brand:a.brand,model:a.model,btu:a.btu,type:a.type,energyClass:a.energyClass||a.classCool,buyPrice:a.buyPrice||0,sellPrice:a.sellPrice||0,listPrice:a.listPrice||0,margin:a.margin||0,qty:l.qty,consultVal:consult};
+  }).filter(Boolean);
+
   const labour=parseFloat(document.getElementById('orcLabour').value)||0;
   const travel=parseFloat(document.getElementById('orcTravel').value)||0;
   const gasAdded=document.getElementById('orcAddGas').checked;
   const gasPrice=gasAdded?parseFloat(document.getElementById('orcGasPrice').value)||0:0;
   const tubeLength=parseFloat(document.getElementById('orcTubeLength').value)||0;
+  const consumables=parseFloat(document.getElementById('orcConsumables').value)||0;
+
   const stockLines=orcStockLines.map(l=>{
     const s=stockItems.find(x=>x.id===l.stockId);
     return s?{name:s.name,qty:l.qty,unit:s.unit||'un',price:s.sellPrice||0,total:(s.sellPrice||0)*l.qty}:null;
   }).filter(Boolean);
+
   const stockTotal=stockLines.reduce((a,l)=>a+l.total,0);
-  const consultVal=acUnit?(acUnit.sellPrice||0)-(acUnit.buyPrice||0):0;
-  const consumables=parseFloat(document.getElementById('orcConsumables').value)||0;
-  const subtotal=consultVal+stockTotal+labour+travel+gasPrice+consumables;
-  const iva=subtotal*0.23;
-  const total=subtotal+iva;
+  const consultTotal=acUnits.reduce((a,u)=>a+u.consultVal,0);
+  // AC buy price with IVA (fatura fornecedor ao cliente, já com IVA)
+  const acBuyTotal=acUnits.reduce((a,u)=>a+(u.buyPrice||0)*(u.qty||1),0)*1.23;
+  // All other values already include IVA
+  const total=acBuyTotal+consultTotal+stockTotal+labour+travel+gasPrice+consumables;
+  const subtotal=total; // kept for compatibility
+  const iva=0;
   const services=currentInstType==='completa'?SERVICES_COMPLETA:SERVICES_SIMPLES;
+
   const data={
     client,
     address:document.getElementById('orcAddress').value.trim(),
@@ -1662,8 +1721,9 @@ window.saveOrc=async function(){
     tubeLength,
     gasAdded,gasPrice,
     consumables,
-    consultVal,
-    acUnit:acUnit?{brand:acUnit.brand,model:acUnit.model,btu:acUnit.btu,type:acUnit.type,energyClass:acUnit.energyClass,buyPrice:acUnit.buyPrice||0,sellPrice:acUnit.sellPrice||0,listPrice:acUnit.listPrice||0,margin:acUnit.margin||0}:null,
+    consultVal:consultTotal,
+    acUnits, // array of machines
+    acUnit:acUnits[0]||null, // keep for backwards compat
     stockLines,labour,travel,subtotal,iva,total,
     date:new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'}),
     createdAt:serverTimestamp()
@@ -1689,7 +1749,7 @@ function renderOrc(){
           <div class="orc-total">${o.total?o.total.toFixed(2)+' €':'—'}</div>
         </div>
       </div>
-      ${o.acUnit?`<div style="font-size:12px;color:var(--text2);margin-top:6px">❄️ ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · ${o.acUnit.energyClass||''}</div>`:''}
+      ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`<div style="font-size:12px;color:var(--text2);margin-top:4px">❄️ ${esc(u.brand)} ${esc(u.model)} — ${u.btu} BTU${u.qty>1?' ×'+u.qty:''}</div>`).join('')}
       ${o.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(o.notes)}</div>`:''}
       <div class="orc-footer" style="flex-wrap:wrap;gap:6px">
         <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
@@ -1826,10 +1886,11 @@ function showReportPdf(o, r){
         <div class="pdf-client-name">${esc(o.client)}</div>
         ${o.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(o.address)}</div>`:''}
       </div>
-      ${o.acUnit?`<div style="margin-bottom:14px;padding:10px;background:#f0f7ff;border-radius:8px;font-size:12px">
-        <div style="font-weight:600;margin-bottom:2px">Unidade instalada</div>
-        <div style="color:#444">${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} · ${o.acUnit.btu} BTU · Classe ${o.acUnit.energyClass||'—'} · ${o.instType==='completa'?'Instalação completa':'Instalação simples'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
-      </div>`:''}
+      ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).length?`<div style="margin-bottom:14px;padding:10px;background:#f0f7ff;border-radius:8px;font-size:12px">
+        <div style="font-weight:600;margin-bottom:4px">Unidade(s) instalada(s)</div>
+        ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`<div style="color:#444;margin-bottom:2px">❄️ ${esc(u.brand)} ${esc(u.model)} · ${u.btu} BTU · Classe ${u.energyClass||'—'}${u.qty>1?' ×'+u.qty:''}</div>`).join('')}
+        <div style="color:#888;margin-top:4px">${o.instType==='completa'?'Instalação completa':'Instalação simples'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
+      </div>`:''}`
 
       <table class="pdf-table">
         <thead><tr><th>Teste</th><th>Pressão</th><th>Tempo</th><th>Resultado</th></tr></thead>
@@ -1945,15 +2006,17 @@ window.showPdf=function(id, mode='client'){
   let content='';
   if(mode==='client'){
     // PDF CLIENTE: preços c/IVA incluído, qtd/medidas visíveis, sem decomposição IVA, máquina no total
-    const iva = 1.23;
-    const acPriceWithIva = o.acUnit ? (o.acUnit.buyPrice||0) * iva : 0;
-    const consultWithIva = (o.consultVal||0) * iva;
-    const labourWithIva = (o.labour||0) * iva;
-    const travelWithIva = (o.travel||0) * iva;
-    const consumWithIva = (o.consumables||0) * iva;
-    const gasWithIva = (o.gasAdded&&o.gasPrice) ? (o.gasPrice||0) * iva : 0;
-    const stockWithIva = (o.stockLines||[]).reduce((a,l)=>a+(l.total||0)*iva, 0);
-    const grandTotal = acPriceWithIva + consultWithIva + labourWithIva + travelWithIva + consumWithIva + gasWithIva + stockWithIva;
+    const allAcUnits = o.acUnits&&o.acUnits.length ? o.acUnits : (o.acUnit?[o.acUnit]:[]);
+    // AC buy price with IVA 23%
+    const acPriceWithIva = allAcUnits.reduce((s,u)=>(s+(u.buyPrice||0)*(u.qty||1)),0) * 1.23;
+    // All other values already include IVA
+    const consultVal = o.consultVal||0;
+    const labourVal = o.labour||0;
+    const travelVal = o.travel||0;
+    const consumVal = o.consumables||0;
+    const gasVal = (o.gasAdded&&o.gasPrice) ? o.gasPrice||0 : 0;
+    const stockVal = (o.stockLines||[]).reduce((a,l)=>a+(l.total||0), 0);
+    const grandTotal = acPriceWithIva + consultVal + labourVal + travelVal + consumVal + gasVal + stockVal;
 
     const servicesHtml = (o.services||[]).map(s=>`<div style="padding:3px 0;font-size:11px;color:#444">✦ ${s.replace(/^[^\s]+\s/,'')}</div>`).join('');
 
@@ -1968,9 +2031,10 @@ window.showPdf=function(id, mode='client'){
 
       <!-- Serviços incluídos + unidade AC -->
       <div style="margin-bottom:16px;padding:12px;background:#f0f7ff;border-radius:8px;border-left:3px solid #3D8EF0">
-        ${o.acUnit?`<div style="font-size:12px;font-weight:600;color:#111;margin-bottom:8px">
-          Unidade de ar condicionado: ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · ${o.acUnit.type||''} · Classe ${o.acUnit.energyClass||''}
-        </div>`:''}
+        ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`
+          <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:4px">
+            ❄️ ${esc(u.brand)} ${esc(u.model)} — ${u.btu} BTU · ${u.type||''} · Classe ${u.energyClass||''}${u.qty>1?' <span style=\"background:#e8f0fe;color:#3D8EF0;padding:1px 6px;border-radius:4px;font-size:11px\">×'+u.qty+'</span>':''}
+          </div>`).join('')}
         <div style="font-size:11px;font-weight:600;color:#3D8EF0;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Serviços incluídos</div>
         ${servicesHtml}
       </div>
@@ -1997,7 +2061,8 @@ window.showPdf=function(id, mode='client'){
   } else {
     // PDF INTERNO: todos os detalhes, preços s/IVA e c/IVA, stock disponível vs a comprar
     const iva = 1.23;
-    const acPriceWithIva = o.acUnit ? (o.acUnit.buyPrice||0) * iva : 0;
+    const allAcUnits = o.acUnits&&o.acUnits.length ? o.acUnits : (o.acUnit?[o.acUnit]:[]);
+    const acPriceWithIva = allAcUnits.reduce((s,u)=>(s+(u.buyPrice||0)*(u.qty||1)),0) * iva;
     const consultWithIva = (o.consultVal||0) * iva;
     const grandTotal = acPriceWithIva +
       (o.consultVal||0)*iva +
@@ -2007,20 +2072,22 @@ window.showPdf=function(id, mode='client'){
       (o.gasAdded&&o.gasPrice?(o.gasPrice||0)*iva:0);
 
     const internalRows=[
-      ...(o.acUnit?[`<tr style="background:#fff8e8">
-        <td><strong>${esc(o.acUnit.brand)} ${esc(o.acUnit.model)}</strong><br/><span style="font-size:10px;color:#888">${o.acUnit.btu} BTU · ${o.acUnit.type||''} · Classe ${o.acUnit.energyClass||''} · Fatura fornecedor</span></td>
-        <td style="text-align:center">1</td><td style="text-align:center">un</td>
-        <td style="text-align:right;color:#888">${(o.acUnit.buyPrice||0).toFixed(2)} €</td>
-        <td style="text-align:right;font-weight:600">${((o.acUnit.buyPrice||0)*iva).toFixed(2)} €</td>
-        <td style="text-align:center;font-size:10px;color:#888">Fatura fornecedor</td>
-      </tr>`,
-      o.consultVal?`<tr style="background:#f0f7ff">
-        <td><strong>Taxa de serviço/consultoria</strong><br/><span style="font-size:10px;color:#888">Margem sobre unidade AC</span></td>
-        <td style="text-align:center">1</td><td style="text-align:center">vg</td>
-        <td style="text-align:right;color:#888">${(o.consultVal||0).toFixed(2)} €</td>
-        <td style="text-align:right;font-weight:600;color:#3D8EF0">${((o.consultVal||0)*iva).toFixed(2)} €</td>
-        <td></td>
-      </tr>`:null]:[]),
+      ...(allAcUnits2.length?[
+        ...allAcUnits2.map(u=>`<tr style="background:#fff8e8">
+          <td><strong>${esc(u.brand)} ${esc(u.model)}</strong><br/><span style="font-size:10px;color:#888">${u.btu} BTU · ${u.type||''} · Classe ${u.energyClass||''} · Fatura fornecedor</span></td>
+          <td style="text-align:center">${u.qty||1}</td><td style="text-align:center">un</td>
+          <td style="text-align:right;color:#888">${((u.buyPrice||0)*(u.qty||1)).toFixed(2)} €</td>
+          <td style="text-align:right;font-weight:600">${((u.buyPrice||0)*(u.qty||1)*iva).toFixed(2)} €</td>
+          <td style="text-align:center;font-size:10px;color:#888">Fatura fornecedor</td>
+        </tr>`),
+        o.consultVal?`<tr style="background:#f0f7ff">
+          <td><strong>Taxa de serviço/consultoria</strong><br/><span style="font-size:10px;color:#888">Margem total sobre unidades AC — recibo verde s/ IVA</span></td>
+          <td style="text-align:center">1</td><td style="text-align:center">vg</td>
+          <td style="text-align:right;color:#888">${(o.consultVal||0).toFixed(2)} €</td>
+          <td style="text-align:right;font-weight:600;color:#3D8EF0">${(o.consultVal||0).toFixed(2)} €</td>
+          <td></td>
+        </tr>`:null
+      ].filter(Boolean):[]),
       ...(o.stockLines||[]).map(l=>{
         const stockItem=stockItems.find(s=>s.name===l.name)||null;
         const inStock=stockItem?stockItem.qty:0;
@@ -2030,14 +2097,14 @@ window.showPdf=function(id, mode='client'){
           <td>${esc(l.name)}</td>
           <td style="text-align:center">${l.qty}</td><td style="text-align:center">${l.unit}</td>
           <td style="text-align:right;color:#888">${l.price?l.price.toFixed(2)+' €':'—'}</td>
-          <td style="text-align:right;font-weight:600">${(l.total*iva).toFixed(2)} €</td>
+          <td style="text-align:right;font-weight:600">${(l.total).toFixed(2)} € <span style="font-size:9px;color:#888">(c/IVA)</span></td>
           <td style="text-align:center;font-size:11px">${stockStatus}</td>
         </tr>`;
       }),
-      o.labour?`<tr><td>Mão de obra / Instalação</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">${(o.labour).toFixed(2)} €</td><td style="text-align:right;font-weight:600">${(o.labour*iva).toFixed(2)} €</td><td></td></tr>`:'',
-      o.travel?`<tr><td>Deslocação</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">${(o.travel).toFixed(2)} €</td><td style="text-align:right;font-weight:600">${(o.travel*iva).toFixed(2)} €</td><td></td></tr>`:'',
-      o.consumables?`<tr><td>Consumíveis</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">${(o.consumables).toFixed(2)} €</td><td style="text-align:right;font-weight:600">${(o.consumables*iva).toFixed(2)} €</td><td></td></tr>`:'',
-      o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">${(o.gasPrice).toFixed(2)} €</td><td style="text-align:right;font-weight:600">${(o.gasPrice*iva).toFixed(2)} €</td><td></td></tr>`:'',
+      o.labour?`<tr><td>Mão de obra / Instalação</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td colspan="2" style="text-align:right;font-weight:600">${(o.labour).toFixed(2)} € <span style="font-size:10px;color:#888">(c/ IVA)</span></td><td></td></tr>`:'',
+      o.travel?`<tr><td>Deslocação</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td colspan="2" style="text-align:right;font-weight:600">${(o.travel).toFixed(2)} € <span style="font-size:10px;color:#888">(c/ IVA)</span></td><td></td></tr>`:'',
+      o.consumables?`<tr><td>Consumíveis</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td colspan="2" style="text-align:right;font-weight:600">${(o.consumables).toFixed(2)} € <span style="font-size:10px;color:#888">(c/ IVA)</span></td><td></td></tr>`:'',
+      o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td colspan="2" style="text-align:right;font-weight:600">${(o.gasPrice).toFixed(2)} € <span style="font-size:10px;color:#888">(c/ IVA)</span></td><td></td></tr>`:'',
     ].filter(Boolean).join('');
 
     content=`<div class="pdf-preview" id="pdfContent">
@@ -2050,7 +2117,8 @@ window.showPdf=function(id, mode='client'){
         <tbody>${internalRows}</tbody>
       </table>
       <div class="pdf-totals">
-        <div class="pdf-tot-row final"><span>TOTAL (IVA incluído)</span><span>${grandTotal.toFixed(2)} €</span></div>
+        <div class="pdf-tot-row"><span>Unidades AC c/IVA (fatura fornecedor)</span><span>${acPriceWithIva.toFixed(2)} €</span></div>
+        <div class="pdf-tot-row final"><span>TOTAL GERAL (IVA incluído)</span><span>${grandTotal.toFixed(2)} €</span></div>
       </div>
       ${(o.stockLines||[]).some(l=>{const s=stockItems.find(x=>x.name===l.name);return !s||s.qty<l.qty;})?`
       <div style="margin-top:14px;padding:12px;background:#ffeaea;border-radius:8px;font-size:12px;color:#c0392b">

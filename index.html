@@ -1890,7 +1890,7 @@ function showReportPdf(o, r){
         <div style="font-weight:600;margin-bottom:4px">Unidade(s) instalada(s)</div>
         ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`<div style="color:#444;margin-bottom:2px">❄️ ${esc(u.brand)} ${esc(u.model)} · ${u.btu} BTU · Classe ${u.energyClass||'—'}${u.qty>1?' ×'+u.qty:''}</div>`).join('')}
         <div style="color:#888;margin-top:4px">${o.instType==='completa'?'Instalação completa':'Instalação simples'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
-      </div>`:''}`
+      </div>`:''}
 
       <table class="pdf-table">
         <thead><tr><th>Teste</th><th>Pressão</th><th>Tempo</th><th>Resultado</th></tr></thead>

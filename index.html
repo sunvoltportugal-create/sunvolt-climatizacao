@@ -941,7 +941,7 @@ import { getFirestore, collection, addDoc, onSnapshot, updateDoc, deleteDoc, doc
 
 let db;
 let stockItems=[], acItems=[], orcamentos=[];
-let stockCatFilter='all', acBrandFilter='all';
+let stockCatFilter='all', acBrandFilter='all', acSeriesFilter='all';
 let orcStockLines=[];
 let currentOrcAcPrice=0;
 let currentOrcConsultValue=0;
@@ -1107,11 +1107,35 @@ window.renderDesktop=function(){
         </tr>`;}).join('')}</tbody></table>`;
 
   } else if(currentTab==='ac'){
+    // Filter row 1: Brand
     const brands=[...new Set(acItems.map(a=>a.brand).filter(Boolean))];
-    filtersEl.innerHTML=[{label:'Todos',val:'all'},...brands.map(b=>({label:b,val:b}))].map(f=>
-      `<button class="fpill ${acBrandFilter===f.val?'active':''}" onclick="setACFilterDesk('${f.val}')">${f.label}</button>`).join('');
+    // Filter row 2: Series/model family
+    const SERIES_KEYWORDS = ['SORA','UMI','Erai Black','Erai','YUKI','Consola','Comfee'];
+    const detectSeries = (model) => {
+      if((model||'').includes('Black')) return 'Erai Black';
+      for(const k of SERIES_KEYWORDS) if((model||'').toUpperCase().includes(k.toUpperCase())) return k;
+      return 'Outros';
+    };
+    const allSeries = [...new Set(acItems.map(a=>detectSeries(a.model)))].sort();
+
+    filtersEl.innerHTML = `
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        ${[{label:'Todas as marcas',val:'all'},...brands.map(b=>({label:b,val:b}))].map(f=>
+          `<button class="fpill ${acBrandFilter===f.val?'active':''}" onclick="setACFilterDesk('${f.val}')">${f.label}</button>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${[{label:'Todas as séries',val:'all'},...allSeries.map(s=>({label:s,val:s}))].map(f=>
+          `<button class="fpill" style="font-size:11px;height:24px" id="sfpill_${f.val.replace(/\s/g,'_')}" onclick="setSeriesFilter('${f.val}')">${f.label}</button>`).join('')}
+      </div>`;
+    // highlight active series pill
+    setTimeout(()=>{
+      const el = document.getElementById('sfpill_'+acSeriesFilter.replace(/\s/g,'_'));
+      if(el) el.classList.add('active');
+    },0);
+
     let items=acItems.filter(a=>{
       if(acBrandFilter!=='all'&&a.brand!==acBrandFilter)return false;
+      if(acSeriesFilter!=='all'&&detectSeries(a.model)!==acSeriesFilter)return false;
       if(q&&!((a.brand||'').toLowerCase().includes(q)||(a.model||'').toLowerCase().includes(q)))return false;
       return true;
     }).sort((a,b)=>(a.buyPrice||0)-(b.buyPrice||0));
@@ -1126,13 +1150,15 @@ window.renderDesktop=function(){
         <th style="text-align:center;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Gás</th>
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Tabela</th>
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Compra</th>
-        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Cons.</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Cons.</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.5px">Venda s/IVA</th>
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Margem</th>
         <th style="padding:8px 12px"></th>
       </tr></thead>
       <tbody>${items.map(a=>{
         const bc=brandColor(a.brand||'');
         const consult=(a.sellPrice||0)-(a.buyPrice||0);
+        const venda=a.sellPrice||0;
         return`<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
           <td style="padding:10px 12px">
             <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${bc}22;color:${bc};margin-right:6px">${esc(a.brand)}</span>
@@ -1149,7 +1175,8 @@ window.renderDesktop=function(){
           <td style="padding:10px 12px;text-align:right;font-size:12px;color:var(--text3)">${a.listPrice?a.listPrice.toFixed(2)+' €':'—'}</td>
           <td style="padding:10px 12px;text-align:right;font-size:13px;color:var(--text2)">${a.buyPrice?a.buyPrice.toFixed(2)+' €':'—'}</td>
           <td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--accent)">${consult>0?consult.toFixed(2)+' €':'—'}</td>
-          <td style="padding:10px 12px;text-align:right"><span style="font-size:12px;font-weight:600;color:var(--green)">${a.margin||0}%</span></td>
+          <td style="padding:10px 12px;text-align:right;font-size:14px;font-weight:700;color:var(--green)">${venda>0?venda.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px;text-align:right"><span style="font-size:12px;font-weight:600;color:var(--text2)">${a.margin||0}%</span></td>
           <td style="padding:10px 12px"><div style="display:flex;gap:4px;justify-content:flex-end">
             <button class="icon-btn" onclick="editAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
             <button class="icon-btn danger" onclick="deleteAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
@@ -1172,13 +1199,15 @@ window.renderDesktop=function(){
         <div class="orc-footer">
           <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
           <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Relatório</button>
-          <button class="orc-btn primary" onclick="showPdf('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+          <button class="orc-btn" onclick="showPdf('${o.id}','client')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>PDF Cliente</button>
+          <button class="orc-btn primary" onclick="showPdf('${o.id}','internal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF Interno</button>
         </div>
       </div>`).join('');
   }
 };
 
 window.setACFilterDesk=function(val){acBrandFilter=val;renderDesktop();};
+window.setSeriesFilter=function(val){acSeriesFilter=val;renderDesktop();};
 
 // ---- MODALS ----
 window.openModal=function(id){document.getElementById(id).classList.add('show');};
@@ -1642,10 +1671,11 @@ function renderOrc(){
       </div>
       ${o.acUnit?`<div style="font-size:12px;color:var(--text2);margin-top:6px">❄️ ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · ${o.acUnit.energyClass||''}</div>`:''}
       ${o.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(o.notes)}</div>`:''}
-      <div class="orc-footer">
-        <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Apagar</button>
+      <div class="orc-footer" style="flex-wrap:wrap;gap:6px">
+        <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
         <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Relatório</button>
-        <button class="orc-btn primary" onclick="showPdf('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button class="orc-btn" onclick="showPdf('${o.id}','client')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Cliente</button>
+        <button class="orc-btn primary" onclick="showPdf('${o.id}','internal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Interno</button>
       </div>
     </div>`).join('');
 }
@@ -1861,58 +1891,53 @@ function showReportPdf(o, r){
 }
 
 // ---- PDF ----
-window.showPdf=function(id){
+window.showPdf=function(id, mode='client'){
   const o=orcamentos.find(x=>x.id===id);if(!o)return;
   currentPdfType='orc';
   currentPdfClient=o.client;
   currentPdfRef=`ORC-${o.id.slice(-5).toUpperCase()}`;
-  document.getElementById('pdfModalTitle').textContent='Orçamento';
-  document.getElementById('shareButtons').style.display='flex';
-  const rows=[
-    // Nota sobre máquina (não entra no valor — fatura direta ao cliente)
-    ...(o.acUnit?[`<tr style="background:#f8f9fa"><td colspan="3" style="font-style:italic;color:#888;font-size:11px">ℹ️ Unidade AC: ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · Fatura emitida diretamente pelo fornecedor ao cliente</td><td style="color:#888;font-size:11px">—</td></tr>`]:[]),
-    // Taxa de serviço/consultoria (margem)
-    ...(o.consultVal?[`<tr><td><strong>Taxa de serviço/consultoria</strong><br/><span style="font-size:10px;color:#888">Seleção, coordenação e acompanhamento técnico da unidade AC</span></td><td>1</td><td>vg</td><td>${(o.consultVal).toFixed(2)} €</td></tr>`]:[]),
-    ...(o.stockLines||[]).map(l=>`<tr><td>${esc(l.name)}</td><td>${l.qty}</td><td>${l.unit}</td><td>${l.total.toFixed(2)} €</td></tr>`),
-    o.labour?`<tr><td>Mão de obra / Instalação</td><td>1</td><td>vg</td><td>${o.labour.toFixed(2)} €</td></tr>`:'',
-    o.travel?`<tr><td>Deslocação</td><td>1</td><td>vg</td><td>${o.travel.toFixed(2)} €</td></tr>`:'',
-    o.consumables?`<tr><td>Consumíveis<br/><span style="font-size:10px;color:#888">parafusos, colas, vedas, espumas, fixações</span></td><td>1</td><td>vg</td><td>${o.consumables.toFixed(2)} €</td></tr>`:'',
-    o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás adicional (tubagem &gt; 5m)</td><td>1</td><td>vg</td><td>${o.gasPrice.toFixed(2)} €</td></tr>`:'',
-  ].filter(Boolean).join('');
-
-  const servicesHtml = (o.services||[]).map(s=>`<div style="font-size:11px;color:#444;padding:2px 0">✦ ${s.replace(/^[^\s]+\s/,'')}</div>`).join('');
-
-  document.getElementById('pdfPreviewArea').innerHTML=`
-    <div class="pdf-preview" id="pdfContent">
-      <div class="pdf-header">
-        <div>
-          <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
-          <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira</div>
-          <div style="font-size:11px;color:#777;margin-top:2px">📍 Covilhã / Aveiro</div>
-          <div style="font-size:11px;color:#777;margin-top:1px">📞 968 184 169</div>
-          <div style="font-size:11px;color:#777;margin-top:1px">✉️ sunvoltportugal@gmail.com</div>
-        </div>
-        <div class="pdf-meta">
-          <div style="font-weight:700">ORÇAMENTO</div>
-          <div>Data: ${o.date||'—'}</div>
-          <div>Ref: ORC-${o.id.slice(-5).toUpperCase()}</div>
-        </div>
+  const ref=`ORC-${o.id.slice(-5).toUpperCase()}`;
+  const servicesHtml=(o.services||[]).map(s=>`<div style="font-size:11px;color:#444;padding:2px 0">✦ ${s.replace(/^[^\s]+\s/,'')}</div>`).join('');
+  const header=`
+    <div class="pdf-header">
+      <div>
+        <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
+        <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira</div>
+        <div style="font-size:11px;color:#777;margin-top:1px">📍 Covilhã / Aveiro &nbsp;|&nbsp; 📞 968 184 169 &nbsp;|&nbsp; ✉️ sunvoltportugal@gmail.com</div>
       </div>
-      <div class="pdf-client">
-        <div class="pdf-client-label">Cliente</div>
-        <div class="pdf-client-name">${esc(o.client)}</div>
-        ${o.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(o.address)}</div>`:''}
+      <div class="pdf-meta">
+        <div style="font-weight:700">${mode==='client'?'ORÇAMENTO':'ORÇAMENTO INTERNO'}</div>
+        <div>Data: ${o.date||'—'}</div>
+        <div>Ref: ${ref}</div>
       </div>
-      ${o.notes?`<div style="font-size:11px;color:#555;margin-bottom:12px;font-style:italic">${esc(o.notes)}</div>`:''}
+    </div>
+    <div class="pdf-client">
+      <div class="pdf-client-label">Cliente</div>
+      <div class="pdf-client-name">${esc(o.client)}</div>
+      ${o.address?`<div style="font-size:12px;color:#555;margin-top:2px">${esc(o.address)}</div>`:''}
+    </div>
+    ${o.notes?`<div style="font-size:11px;color:#555;margin-bottom:12px;font-style:italic">${esc(o.notes)}</div>`:''}
+    ${o.instType?`<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">${o.instType==='completa'?'Instalação completa (com furos para exterior)':'Instalação simples (pré-instalação existente)'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
+      <div style="padding:10px;background:#f5f7fa;border-radius:8px">${servicesHtml}</div>
+    </div>`:''}`;
 
-      ${o.instType?`<div style="margin-bottom:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:6px">Tipo de serviço</div>
-        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:6px">${o.instType==='completa'?'Instalação completa (com furos para exterior)':'Instalação simples (pré-instalação existente)'}${o.tubeLength?` · Tubagem: ${o.tubeLength}m`:''}</div>
-        <div style="padding:10px;background:#f5f7fa;border-radius:8px">${servicesHtml}</div>
-      </div>`:''}
-
+  let content='';
+  if(mode==='client'){
+    // PDF CLIENTE: descrição limpa, sem preços internos, com total
+    const rows=[
+      ...(o.acUnit?[`<tr style="background:#f8f9fa"><td colspan="2" style="font-style:italic;color:#888;font-size:11px">ℹ️ Unidade AC: ${esc(o.acUnit.brand)} ${esc(o.acUnit.model)} — ${o.acUnit.btu} BTU · ${o.acUnit.type||''} · Classe ${o.acUnit.energyClass||''}<br/>Fatura emitida diretamente pelo fornecedor ao cliente</td></tr>`]:[]),
+      ...(o.consultVal?[`<tr><td><strong>Taxa de serviço/consultoria</strong><br/><span style="font-size:10px;color:#888">Seleção, coordenação e acompanhamento técnico da unidade AC</span></td><td style="text-align:right;font-weight:600">${(o.consultVal).toFixed(2)} €</td></tr>`]:[]),
+      ...(o.stockLines||[]).map(l=>`<tr><td>${esc(l.name)}</td><td style="text-align:right;font-weight:600">${l.total.toFixed(2)} €</td></tr>`),
+      o.labour?`<tr><td>Mão de obra / Instalação</td><td style="text-align:right;font-weight:600">${o.labour.toFixed(2)} €</td></tr>`:'',
+      o.travel?`<tr><td>Deslocação</td><td style="text-align:right;font-weight:600">${o.travel.toFixed(2)} €</td></tr>`:'',
+      o.consumables?`<tr><td>Consumíveis (parafusos, colas, vedas, espumas, fixações)</td><td style="text-align:right;font-weight:600">${o.consumables.toFixed(2)} €</td></tr>`:'',
+      o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás adicional (tubagem &gt; 5m)</td><td style="text-align:right;font-weight:600">${o.gasPrice.toFixed(2)} €</td></tr>`:'',
+    ].filter(Boolean).join('');
+    content=`<div class="pdf-preview" id="pdfContent">
+      ${header}
       <table class="pdf-table">
-        <thead><tr><th>Descrição</th><th>Qtd</th><th>Un</th><th>Valor</th></tr></thead>
+        <thead><tr><th>Descrição do serviço</th><th style="text-align:right">Valor</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="pdf-totals">
@@ -1922,6 +1947,65 @@ window.showPdf=function(id){
       </div>
       <div class="pdf-footer">Orçamento válido por 30 dias · Obrigado pela preferência</div>
     </div>`;
+    document.getElementById('pdfModalTitle').textContent='PDF Cliente';
+  } else {
+    // PDF INTERNO: todos os detalhes, preços, stock disponível vs a comprar
+    const internalRows=[
+      ...(o.acUnit?[`<tr style="background:#fff8e8">
+        <td><strong>${esc(o.acUnit.brand)} ${esc(o.acUnit.model)}</strong><br/><span style="font-size:10px;color:#888">${o.acUnit.btu} BTU · ${o.acUnit.type||''} · Classe ${o.acUnit.energyClass||''}</span></td>
+        <td style="text-align:center">1</td><td style="text-align:center">un</td>
+        <td style="text-align:right;color:#888">${(o.acUnit.buyPrice||0).toFixed(2)} €</td>
+        <td style="text-align:right;font-weight:600;color:#B07D2A">${(o.consultVal||0).toFixed(2)} €</td>
+        <td style="text-align:center;font-size:10px;color:#888">Fatura fornecedor</td>
+      </tr>`]:[]),
+      ...(o.stockLines||[]).map(l=>{
+        const stockItem=stockItems.find(s=>s.name===l.name)||null;
+        const inStock=stockItem?stockItem.qty:0;
+        const needed=l.qty;
+        const toBuy=Math.max(0,needed-inStock);
+        const stockStatus=toBuy>0?`<span style="color:#c0392b">⚠️ Falta ${toBuy} ${l.unit}</span>`:`<span style="color:#1a7a50">✓ Em stock</span>`;
+        return`<tr>
+          <td>${esc(l.name)}</td>
+          <td style="text-align:center">${l.qty}</td><td style="text-align:center">${l.unit}</td>
+          <td style="text-align:right;color:#888">${l.price?l.price.toFixed(2)+' €':'—'}</td>
+          <td style="text-align:right;font-weight:600">${l.total.toFixed(2)} €</td>
+          <td style="text-align:center;font-size:11px">${stockStatus}</td>
+        </tr>`;
+      }),
+      o.labour?`<tr><td>Mão de obra / Instalação</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">—</td><td style="text-align:right;font-weight:600">${o.labour.toFixed(2)} €</td><td></td></tr>`:'',
+      o.travel?`<tr><td>Deslocação</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">—</td><td style="text-align:right;font-weight:600">${o.travel.toFixed(2)} €</td><td></td></tr>`:'',
+      o.consumables?`<tr><td>Consumíveis</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">—</td><td style="text-align:right;font-weight:600">${o.consumables.toFixed(2)} €</td><td></td></tr>`:'',
+      o.gasAdded&&o.gasPrice?`<tr><td>Carga de gás</td><td style="text-align:center">1</td><td style="text-align:center">vg</td><td style="text-align:right;color:#888">—</td><td style="text-align:right;font-weight:600">${o.gasPrice.toFixed(2)} €</td><td></td></tr>`:'',
+    ].filter(Boolean).join('');
+    content=`<div class="pdf-preview" id="pdfContent">
+      ${header}
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#856404">
+        🔒 DOCUMENTO INTERNO — Não partilhar com o cliente
+      </div>
+      <table class="pdf-table">
+        <thead><tr><th>Descrição</th><th style="text-align:center">Qtd</th><th style="text-align:center">Un</th><th style="text-align:right">Preço unit.</th><th style="text-align:right">Total</th><th style="text-align:center">Stock</th></tr></thead>
+        <tbody>${internalRows}</tbody>
+      </table>
+      <div class="pdf-totals">
+        <div class="pdf-tot-row"><span>Subtotal s/ IVA (faturado ao cliente)</span><span>${(o.subtotal||0).toFixed(2)} €</span></div>
+        <div class="pdf-tot-row"><span>IVA 23%</span><span>${(o.iva||0).toFixed(2)} €</span></div>
+        <div class="pdf-tot-row final"><span>TOTAL FATURADO</span><span>${(o.total||0).toFixed(2)} €</span></div>
+      </div>
+      ${(o.stockLines||[]).some(l=>{const s=stockItems.find(x=>x.name===l.name);return s&&s.qty<l.qty;})?`
+      <div style="margin-top:14px;padding:12px;background:#ffeaea;border-radius:8px;font-size:12px;color:#c0392b">
+        <strong>⚠️ Material a comprar:</strong><br/>
+        ${(o.stockLines||[]).filter(l=>{const s=stockItems.find(x=>x.name===l.name);return !s||s.qty<l.qty;}).map(l=>{
+          const s=stockItems.find(x=>x.name===l.name);
+          const has=s?s.qty:0;
+          return `${esc(l.name)}: precisa ${l.qty} ${l.unit}, tem ${has} → comprar ${Math.max(0,l.qty-has)} ${l.unit}`;
+        }).join('<br/>')}
+      </div>`:'<div style="margin-top:14px;padding:12px;background:#e8f5ee;border-radius:8px;font-size:12px;color:#1a7a50">✅ Todo o material necessário está disponível em stock</div>'}
+      <div class="pdf-footer">Documento interno SunVolt · ${o.date||''}</div>
+    </div>`;
+    document.getElementById('pdfModalTitle').textContent='PDF Interno';
+  }
+  document.getElementById('shareButtons').style.display='flex';
+  document.getElementById('pdfPreviewArea').innerHTML=content;
   openModal('pdfModal');
 };
 

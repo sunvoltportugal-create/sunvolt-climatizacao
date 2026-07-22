@@ -638,22 +638,22 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     </div>
 
     <div class="orc-section">
-      <div class="orc-sec-title">Serviços incluídos</div>
-      <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px">
-        <div id="servicesList" style="font-size:12px;color:var(--text2);line-height:2"></div>
+      <div class="orc-sec-title">Comprimento da tubagem</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input class="field-input" id="orcTubeLength" type="number" step="0.5" min="0" placeholder="Ex: 4" style="flex:1" oninput="onTubeLengthChange()"/>
+        <span style="font-size:14px;color:var(--text2);white-space:nowrap">metros</span>
       </div>
-      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;padding:10px;background:var(--amber-light);border-radius:var(--radius-sm);border:1px solid rgba(240,166,51,.2)">
+      <div id="orcGasRow" style="display:none;margin-top:10px;align-items:center;gap:10px;padding:10px;background:var(--amber-light);border-radius:var(--radius-sm);border:1px solid rgba(240,166,51,.2)">
         <input type="checkbox" id="orcAddGas" onchange="toggleGasPrice()" style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
-        <label for="orcAddGas" style="font-size:13px;color:var(--amber);font-weight:500;cursor:pointer">Carga de gás (tubagem &gt; 5m)</label>
+        <label for="orcAddGas" style="font-size:13px;color:var(--amber);font-weight:500;cursor:pointer">Carga de gás necessária (tubagem &gt; 5m)</label>
         <input class="orc-item-qty" type="number" step="0.01" id="orcGasPrice" placeholder="€" oninput="calcOrcTotal()" style="width:70px;margin-left:auto;display:none"/>
       </div>
     </div>
 
     <div class="orc-section">
-      <div class="orc-sec-title">Comprimento da tubagem</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input class="field-input" id="orcTubeLength" type="number" step="0.5" min="0" placeholder="Ex: 4" style="flex:1"/>
-        <span style="font-size:14px;color:var(--text2);white-space:nowrap">metros</span>
+      <div class="orc-sec-title">Serviços incluídos</div>
+      <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px">
+        <div id="servicesList" style="font-size:12px;color:var(--text2);line-height:2"></div>
       </div>
     </div>
 
@@ -1522,6 +1522,80 @@ window.toggleGasPrice = function(){
   calcOrcTotal();
 };
 
+window.onTubeLengthChange = function(){
+  const len = parseFloat(document.getElementById('orcTubeLength').value)||0;
+  const gasRow = document.getElementById('orcGasRow');
+
+  if(len > 0){
+    gasRow.style.display = 'flex';
+    if(len > 5){
+      // Auto-check gas
+      document.getElementById('orcAddGas').checked = true;
+      document.getElementById('orcGasPrice').style.display = 'block';
+      gasRow.style.background = 'var(--amber-light)';
+    } else {
+      document.getElementById('orcAddGas').checked = false;
+      document.getElementById('orcGasPrice').style.display = 'none';
+      gasRow.style.background = 'var(--green-light)';
+      gasRow.style.borderColor = 'rgba(46,204,138,.2)';
+    }
+  } else {
+    gasRow.style.display = 'none';
+  }
+
+  // Auto-fill stock materials based on tube length
+  autoFillMaterials(len);
+  calcOrcTotal();
+};
+
+function autoFillMaterials(len){
+  if(len <= 0) return;
+
+  // Get pipe sizes from selected AC units
+  let pipeLiq = '1/4"', pipeGas = '3/8"';
+  for(const l of orcAcLines){
+    const a = acItems.find(x=>x.id===l.acId);
+    if(a){
+      if(a.pipeLiq) pipeLiq = a.pipeLiq + '"';
+      if(a.pipeGas) pipeGas = a.pipeGas + '"';
+      break;
+    }
+  }
+
+  // Materials to auto-add based on tube length
+  const MATERIAL_KEYWORDS = [
+    { keywords: ['cobre', '1/4', 'liquido', 'líquido'], qty: len, unit: 'm', label: `Tubo Cobre ${pipeLiq} (líquido)` },
+    { keywords: ['cobre', '3/8', '1/2', 'gas', 'gás'], qty: len, unit: 'm', label: `Tubo Cobre ${pipeGas} (gás)` },
+    { keywords: ['condensados', 'drenagem', 'dreno'], qty: len, unit: 'm', label: 'Tubo Condensados 16mm' },
+    { keywords: ['5g', '5 g', '1,5', '1.5', 'comunicação', 'comunicacao'], qty: len, unit: 'm', label: 'Cabo 5G 1,5mm' },
+  ];
+
+  // Try to match stock items and pre-fill
+  const newLines = [];
+  for(const mat of MATERIAL_KEYWORDS){
+    // Find matching stock item
+    const found = stockItems.find(s => {
+      const name = (s.name||'').toLowerCase();
+      return mat.keywords.some(k => name.includes(k.toLowerCase()));
+    });
+    if(found){
+      // Check if already in list
+      const exists = orcStockLines.find(l => l.stockId === found.id);
+      if(!exists){
+        newLines.push({ stockId: found.id, qty: len });
+      } else {
+        // Update qty
+        exists.qty = len;
+      }
+    }
+  }
+
+  if(newLines.length > 0){
+    orcStockLines = [...orcStockLines, ...newLines];
+  }
+  renderOrcStockLines();
+}
+
 window.toggleReportGas = function(){
   document.getElementById('rGasFields').style.display = document.getElementById('rGasAdded').checked?'block':'none';
 };
@@ -1547,6 +1621,9 @@ window.updateOrcAcLine = function(i){
   if(qtyEl) orcAcLines[i].qty=parseInt(qtyEl.value)||1;
   renderOrcAcLineInfo(i);
   updateConsultTotal();
+  // Re-run auto-fill with current tube length when AC changes (to get correct pipe sizes)
+  const len = parseFloat(document.getElementById('orcTubeLength').value)||0;
+  if(len > 0) autoFillMaterials(len);
   calcOrcTotal();
 };
 
@@ -1611,6 +1688,7 @@ function clearOrcForm(){
   currentOrcAcMargin=0;
   currentInstType='completa';
   document.getElementById('orcConsultRow').style.display='none';
+  document.getElementById('orcGasRow').style.display='none';
   document.getElementById('orcAddGas').checked=false;
   document.getElementById('orcGasPrice').style.display='none';
   document.getElementById('instTypeCompleta').classList.add('active');

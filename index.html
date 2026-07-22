@@ -1158,6 +1158,7 @@ window.renderDesktop=function(){
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Compra</th>
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Cons.</th>
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.5px">Venda s/IVA</th>
+        <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.5px">Venda c/IVA</th>
         <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Margem</th>
         <th style="padding:8px 12px"></th>
       </tr></thead>
@@ -1167,7 +1168,7 @@ window.renderDesktop=function(){
         const venda=a.sellPrice||0;
         const series=detectSeries(a.model);
         const prevSeries=i>0?detectSeries(items[i-1].model):null;
-        const seriesHeader=series!==prevSeries?`<tr style="background:var(--surface3)"><td colspan="10" style="padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)">${series}</td></tr>`:'';
+        const seriesHeader=series!==prevSeries?`<tr style="background:var(--surface3)"><td colspan="11" style="padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)">${series}</td></tr>`:'';
         return seriesHeader+`<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
           <td style="padding:10px 12px">
             <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${bc}22;color:${bc};margin-right:6px">${esc(a.brand)}</span>
@@ -1185,6 +1186,7 @@ window.renderDesktop=function(){
           <td style="padding:10px 12px;text-align:right;font-size:13px;color:var(--text2)">${a.buyPrice?a.buyPrice.toFixed(2)+' €':'—'}</td>
           <td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:600;color:var(--accent)">${consult>0?consult.toFixed(2)+' €':'—'}</td>
           <td style="padding:10px 12px;text-align:right;font-size:14px;font-weight:700;color:var(--green)">${venda>0?venda.toFixed(2)+' €':'—'}</td>
+          <td style="padding:10px 12px;text-align:right;font-size:14px;font-weight:700;color:var(--amber)">${venda>0?(venda*1.23).toFixed(2)+' €':'—'}</td>
           <td style="padding:10px 12px;text-align:right"><span style="font-size:12px;font-weight:600;color:var(--text2)">${a.margin||0}%</span></td>
           <td style="padding:10px 12px"><div style="display:flex;gap:4px;justify-content:flex-end">
             <button class="icon-btn" onclick="editAC('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>

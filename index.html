@@ -611,8 +611,9 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 <div class="modal-overlay" id="orcModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Novo orçamento</div>
+    <div class="modal-title" id="orcModalTitle">Novo orçamento</div>
     <div class="modal-sub">Instalação de ar condicionado</div>
+    <input type="hidden" id="orcEditId"/>
 
     <label class="field-label">Nome do cliente</label>
     <input class="field-input" id="orcClient" placeholder="Ex: João Silva"/>
@@ -677,7 +678,10 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     <div class="orc-section">
       <div class="orc-sec-title">Material do stock</div>
       <div id="orcStockItems"></div>
-      <button onclick="addOrcStockLine()" style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">+ Adicionar material do stock</button>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="addOrcStockLine()" style="flex:1;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer">+ Do stock</button>
+        <button onclick="addOrcFreeLine()" style="flex:1;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--accent);background:transparent;color:var(--accent);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer">+ Material livre</button>
+      </div>
     </div>
 
     <div class="orc-section">
@@ -966,6 +970,16 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
             <input type="file" accept="image/*" capture="environment" id="photoFinalExtInput" onchange="uploadPhoto('finalExt',this)" style="display:none"/>
           </label>
         </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:8px">Fotos adicionais (quadro geral, detalhes, etc.)</div>
+        <div id="extraPhotosGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+        <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          + Adicionar foto extra
+          <input type="file" accept="image/*" capture="environment" id="extraPhotoInput" onchange="addExtraPhoto(this)" style="display:none" multiple/>
+        </label>
       </div>
     </div>
 
@@ -1284,6 +1298,7 @@ window.renderDesktop=function(){
         ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`<div style="font-size:12px;color:var(--text2);margin-top:4px">❄️ ${esc(u.brand)} ${esc(u.model)} — ${u.btu} BTU${u.qty>1?' ×'+u.qty:''}</div>`).join('')}
         <div class="orc-footer">
           <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
+          <button class="orc-btn" onclick="editOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
           <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Relatório</button>
           <button class="orc-btn" onclick="showPdf('${o.id}','client')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>PDF Cliente</button>
           <button class="orc-btn primary" onclick="showPdf('${o.id}','internal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF Interno</button>
@@ -1754,6 +1769,8 @@ window.openOrcBuilder=function(){
 };
 
 function clearOrcForm(){
+  const editIdEl=document.getElementById('orcEditId');if(editIdEl)editIdEl.value='';
+  const titleEl=document.getElementById('orcModalTitle');if(titleEl)titleEl.textContent='Novo orçamento';
   ['orcClient','orcAddress','orcNotes','orcLabour','orcTravel','orcGasPrice','orcTubeLength','orcConsumables'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   currentOrcAcPrice=0;
   currentOrcConsultValue=0;
@@ -1769,39 +1786,133 @@ function clearOrcForm(){
 }
 
 window.addOrcStockLine=function(){
-  orcStockLines.push({stockId:'',qty:1});
+  orcStockLines.push({stockId:'',qty:1,free:false});
+  renderOrcStockLines();
+};
+
+window.addOrcFreeLine=function(){
+  orcStockLines.push({stockId:'',qty:1,free:true,name:'',price:0,unit:'un'});
   renderOrcStockLines();
 };
 
 function renderOrcStockLines(){
   document.getElementById('orcStockItems').innerHTML=orcStockLines.map((l,i)=>`
-    <div class="orc-item-row">
-      <select class="field-select" id="osl-id-${i}" onchange="updateOrcLine(${i})" style="height:32px;font-size:12px;flex:1">
-        <option value="">— Material —</option>
-        ${stockItems.map(s=>`<option value="${s.id}" ${l.stockId===s.id?'selected':''}>${esc(s.name)} (${s.sellPrice?s.sellPrice.toFixed(2)+' €/'+s.unit:'s/preço'})</option>`).join('')}
-      </select>
-      <input class="orc-item-qty" type="number" min="1" value="${l.qty}" id="osl-qty-${i}" oninput="updateOrcLine(${i})" style="width:48px"/>
-      <span class="orc-item-price" id="osl-price-${i}">${calcLinePrice(l)}</span>
+    <div class="orc-item-row" style="align-items:flex-start;flex-wrap:wrap;gap:6px;padding:8px 0">
+      ${l.free?`
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
+          <input class="field-input" placeholder="Nome do material" value="${esc(l.name||'')}" id="osl-name-${i}" oninput="updateOrcLine(${i})" style="height:32px;font-size:12px"/>
+          <div style="display:flex;gap:4px">
+            <input class="orc-item-qty" type="number" min="0" step="0.01" value="${l.price||0}" id="osl-price-free-${i}" oninput="updateOrcLine(${i})" placeholder="€/un" style="width:70px" title="Preço unitário"/>
+            <select id="osl-unit-${i}" onchange="updateOrcLine(${i})" style="height:32px;padding:0 6px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:12px">
+              <option ${(l.unit||'un')==='un'?'selected':''}>un</option>
+              <option ${l.unit==='m'?'selected':''}>m</option>
+              <option ${l.unit==='rolo'?'selected':''}>rolo</option>
+              <option ${l.unit==='vg'?'selected':''}>vg</option>
+            </select>
+          </div>
+        </div>`:`
+        <select class="field-select" id="osl-id-${i}" onchange="updateOrcLine(${i})" style="height:32px;font-size:12px;flex:1">
+          <option value="">— Material do stock —</option>
+          ${stockItems.map(s=>`<option value="${s.id}" ${l.stockId===s.id?'selected':''}>${esc(s.name)} (${s.sellPrice?s.sellPrice.toFixed(2)+' €/'+s.unit:'s/preço'})</option>`).join('')}
+        </select>`}
+      <input class="orc-item-qty" type="number" min="1" value="${l.qty}" id="osl-qty-${i}" oninput="updateOrcLine(${i})" style="width:52px" title="Quantidade"/>
+      <span class="orc-item-price" id="osl-price-${i}" style="min-width:52px;text-align:right">${calcLinePrice(l)}</span>
       <button onclick="removeOrcLine(${i})" style="width:26px;height:26px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:16px">×</button>
     </div>`).join('');
 }
 
 function calcLinePrice(l){
+  if(l.free){
+    const p=parseFloat(l.price)||0;
+    return p>0?(p*l.qty).toFixed(2)+' €':'—';
+  }
   const s=stockItems.find(x=>x.id===l.stockId);
   if(!s||!s.sellPrice)return'—';
   return(s.sellPrice*l.qty).toFixed(2)+' €';
 }
 
 window.updateOrcLine=function(i){
-  orcStockLines[i].stockId=document.getElementById(`osl-id-${i}`).value;
-  orcStockLines[i].qty=parseFloat(document.getElementById(`osl-qty-${i}`).value)||1;
-  const price=calcLinePrice(orcStockLines[i]);
-  document.getElementById(`osl-price-${i}`).textContent=price;
+  const l=orcStockLines[i];
+  if(l.free){
+    l.name=(document.getElementById(`osl-name-${i}`)?.value||'').trim();
+    l.price=parseFloat(document.getElementById(`osl-price-free-${i}`)?.value)||0;
+    l.unit=document.getElementById(`osl-unit-${i}`)?.value||'un';
+  } else {
+    l.stockId=document.getElementById(`osl-id-${i}`)?.value||'';
+  }
+  l.qty=parseFloat(document.getElementById(`osl-qty-${i}`)?.value)||1;
+  const price=calcLinePrice(l);
+  const priceEl=document.getElementById(`osl-price-${i}`);
+  if(priceEl) priceEl.textContent=price;
   calcOrcTotal();
 };
 
 window.removeOrcLine=function(i){
   orcStockLines.splice(i,1);renderOrcStockLines();calcOrcTotal();
+};
+
+// ---- EDIT ORC ----
+let editingOrcId = null;
+
+window.editOrc = function(id){
+  const o = orcamentos.find(x=>x.id===id);
+  if(!o) return;
+  editingOrcId = id;
+
+  clearOrcForm();
+
+  // Populate fields
+  document.getElementById('orcEditId').value = id;
+  document.getElementById('orcModalTitle').textContent = 'Editar orçamento';
+  document.getElementById('orcClient').value = o.client||'';
+  document.getElementById('orcAddress').value = o.address||'';
+  document.getElementById('orcNotes').value = o.notes||'';
+  document.getElementById('orcLabour').value = o.labour||'';
+  document.getElementById('orcTravel').value = o.travel||'';
+  document.getElementById('orcConsumables').value = o.consumables||'';
+  document.getElementById('orcTubeLength').value = o.tubeLength||'';
+
+  // Install type
+  if(o.instType==='simples'){
+    setInstType('simples', document.getElementById('instTypeSimples'));
+  } else {
+    setInstType('completa', document.getElementById('instTypeCompleta'));
+  }
+
+  // Gas
+  if(o.gasAdded){
+    document.getElementById('orcAddGas').checked=true;
+    document.getElementById('orcGasPrice').value=o.gasPrice||'';
+    document.getElementById('orcGasPrice').style.display='block';
+    document.getElementById('orcGasRow').style.display='flex';
+  } else if(o.tubeLength>0){
+    document.getElementById('orcGasRow').style.display='flex';
+  }
+
+  // AC units
+  orcAcLines = (o.acUnits||[]).map(u=>({acId:'', qty:u.qty||1, _savedUnit:u}));
+  // Try to match saved units back to acItems
+  orcAcLines.forEach((l,i)=>{
+    const u=l._savedUnit;
+    const found=acItems.find(a=>a.brand===u.brand&&a.model===u.model);
+    if(found) orcAcLines[i].acId=found.id;
+  });
+  renderOrcAcLines();
+
+  // Stock lines — both stock and free
+  orcStockLines = (o.stockLines||[]).map(l=>{
+    const stockItem = stockItems.find(s=>s.name===l.name);
+    if(stockItem){
+      return {stockId:stockItem.id, qty:l.qty, free:false};
+    } else {
+      return {stockId:'', qty:l.qty, free:true, name:l.name, price:l.price||0, unit:l.unit||'un'};
+    }
+  });
+  renderOrcStockLines();
+
+  updateServicesList();
+  calcOrcTotal();
+  openModal('orcModal');
 };
 
 window.calcOrcTotal=function(){
@@ -1811,6 +1922,7 @@ window.calcOrcTotal=function(){
   const gasAdded=document.getElementById('orcAddGas').checked;
   const gas=gasAdded?parseFloat(document.getElementById('orcGasPrice').value)||0:0;
   const stockTotal=orcStockLines.reduce((acc,l)=>{
+    if(l.free) return acc+((l.price||0)*l.qty);
     const s=stockItems.find(x=>x.id===l.stockId);
     return acc+(s&&s.sellPrice?s.sellPrice*l.qty:0);
   },0);
@@ -1848,6 +1960,11 @@ window.saveOrc=async function(){
   const consumables=parseFloat(document.getElementById('orcConsumables').value)||0;
 
   const stockLines=orcStockLines.map(l=>{
+    if(l.free){
+      const p=l.price||0;
+      if(!l.name) return null;
+      return {name:l.name,qty:l.qty,unit:l.unit||'un',price:p,total:p*l.qty,free:true};
+    }
     const s=stockItems.find(x=>x.id===l.stockId);
     return s?{name:s.name,qty:l.qty,unit:s.unit||'un',price:s.sellPrice||0,total:(s.sellPrice||0)*l.qty}:null;
   }).filter(Boolean);
@@ -1878,8 +1995,17 @@ window.saveOrc=async function(){
     date:new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'}),
     createdAt:serverTimestamp()
   };
-  await addDoc(collection(db,'ep_orc'),data);
-  closeModal('orcModal');showToast('Orçamento guardado ✓');
+  const editId = document.getElementById('orcEditId')?.value;
+  if(editId){
+    await updateDoc(doc(db,'ep_orc',editId),{...data,createdAt:undefined});
+    closeModal('orcModal');
+    document.getElementById('orcEditId').value='';
+    document.getElementById('orcModalTitle').textContent='Novo orçamento';
+    showToast('Orçamento atualizado ✓');
+  } else {
+    await addDoc(collection(db,'ep_orc'),data);
+    closeModal('orcModal');showToast('Orçamento guardado ✓');
+  }
 };
 
 // ---- ORC LIST ----
@@ -1903,6 +2029,7 @@ function renderOrc(){
       ${o.notes?`<div style="font-size:11px;color:var(--text3);margin-top:4px">${esc(o.notes)}</div>`:''}
       <div class="orc-footer" style="flex-wrap:wrap;gap:6px">
         <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
+        <button class="orc-btn" onclick="editOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
         <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Relatório</button>
         <button class="orc-btn" onclick="showPdf('${o.id}','client')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Cliente</button>
         <button class="orc-btn primary" onclick="showPdf('${o.id}','internal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Interno</button>
@@ -1919,6 +2046,7 @@ window.deleteOrc=async function(id){
 const CLOUD_NAME = 'zh5oqy9f';
 const UPLOAD_PRESET = 'sunvolt_uploads';
 let reportPhotos = {int: null, ext: null, tube: null, elec: null, p10: null, p20: null, p40: null, vacuum: null, cold: null, hot: null, serialInt: null, serialExt: null, elecInt: null, elecExt: null, finalInt: null, finalExt: null};
+let extraPhotos = [];
 
 window.uploadPhoto = async function(type, input){
   const file = input.files[0];
@@ -1943,6 +2071,11 @@ window.uploadPhoto = async function(type, input){
 
 function resetPhotos(){
   reportPhotos = {int:null, ext:null, tube:null, elec:null, p10:null, p20:null, p40:null, vacuum:null, cold:null, hot:null, serialInt:null, serialExt:null, elecInt:null, elecExt:null, finalInt:null, finalExt:null};
+  extraPhotos = [];
+  const epGrid = document.getElementById('extraPhotosGrid');
+  if(epGrid) epGrid.innerHTML='';
+  const epInput = document.getElementById('extraPhotoInput');
+  if(epInput) epInput.value='';
   ['Int','Ext','Tube','Elec','SerialInt','SerialExt','ElecInt','ElecExt','FinalInt','FinalExt'].forEach(t=>{
     const pre = document.getElementById(`photo${t}Preview`);
     const lbl = document.getElementById(`photo${t}Label`);
@@ -1980,6 +2113,40 @@ window.openReport = function(id){
   openModal('reportModal');
 };
 
+window.addExtraPhoto = async function(input){
+  const files = Array.from(input.files);
+  for(const file of files){
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    try{
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:formData});
+      const data = await res.json();
+      if(data.secure_url){
+        extraPhotos.push(data.secure_url);
+        renderExtraPhotos();
+        showToast('Foto adicionada!');
+      }
+    }catch(e){ showToast('Erro ao carregar foto'); }
+  }
+  input.value='';
+};
+
+function renderExtraPhotos(){
+  const grid = document.getElementById('extraPhotosGrid');
+  if(!grid) return;
+  grid.innerHTML = extraPhotos.map((url, i)=>`
+    <div style="position:relative">
+      <img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px"/>
+      <button onclick="removeExtraPhoto(${i})" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
+    </div>`).join('');
+}
+
+window.removeExtraPhoto = function(i){
+  extraPhotos.splice(i,1);
+  renderExtraPhotos();
+};
+
 window.saveAndShowReport = async function(){
   const o = orcamentos.find(x=>x.id===currentReportOrcId);
   if(!o) return;
@@ -2001,7 +2168,8 @@ window.saveAndShowReport = async function(){
     hotOut: document.getElementById('rHotOut').value,
     ambient: document.getElementById('rAmbient').value,
     observations: document.getElementById('rObservations').value,
-    photos: {...reportPhotos}, // includes serialInt, serialExt, elecInt, elecExt
+    photos: {...reportPhotos},
+    extraPhotos: [...extraPhotos],
     reportDate: new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'})
   };
   await updateDoc(doc(db,'ep_orc',currentReportOrcId),{report:reportData});
@@ -2132,6 +2300,14 @@ function showReportPdf(o, r){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           ${r.photos.finalInt?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Máquina interna — concluída</div><img src="${r.photos.finalInt}" style="width:100%;border-radius:6px;object-fit:cover;aspect-ratio:4/3"/></div>`:''}
           ${r.photos.finalExt?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Máquina externa — concluída</div><img src="${r.photos.finalExt}" style="width:100%;border-radius:6px;object-fit:cover;aspect-ratio:4/3"/></div>`:''}
+        </div>
+      </div>`:''}
+
+      ${r.extraPhotos&&r.extraPhotos.length?`
+      <div style="margin-top:14px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">📸 Fotos adicionais</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          ${r.extraPhotos.map((url,i)=>`<div><img src="${url}" style="width:100%;border-radius:6px;object-fit:cover;aspect-ratio:1"/></div>`).join('')}
         </div>
       </div>`:''}
 

@@ -72,6 +72,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 
 /* DESKTOP CARDS GRID */
 .desktop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.desktop-grid.orc-grid{grid-template-columns:1fr;max-width:900px}
 
 /* MODE SELECTOR */
 #modeScreen{position:fixed;inset:0;background:var(--bg);z-index:102;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px}
@@ -163,8 +164,8 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .orc-date{font-size:11px;color:var(--text3);margin-top:2px}
 .orc-total{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:-.5px}
 .orc-total-label{font-size:10px;color:var(--text3)}
-.orc-footer{display:flex;gap:6px;margin-top:10px}
-.orc-btn{flex:1;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.orc-footer{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.orc-btn{height:32px;padding:0 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;white-space:nowrap}
 .orc-btn:hover{background:var(--surface2)}
 .orc-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .orc-btn svg{width:13px;height:13px}
@@ -647,7 +648,10 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <div id="orcGasRow" style="display:none;margin-top:10px;align-items:center;gap:10px;padding:10px;background:var(--amber-light);border-radius:var(--radius-sm);border:1px solid rgba(240,166,51,.2)">
         <input type="checkbox" id="orcAddGas" onchange="toggleGasPrice()" style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
         <label for="orcAddGas" style="font-size:13px;color:var(--amber);font-weight:500;cursor:pointer">Carga de gás necessária (tubagem &gt; 5m)</label>
-        <input class="orc-item-qty" type="number" step="0.01" id="orcGasPrice" placeholder="€" oninput="calcOrcTotal()" style="width:70px;margin-left:auto;display:none"/>
+        <div style="display:flex;align-items:center;gap:4px;margin-left:auto">
+          <input class="orc-item-qty" type="number" step="0.01" id="orcGasPrice" placeholder="0.00" oninput="calcOrcTotal()" style="width:80px;display:none"/>
+          <span id="orcGasPriceLabel" style="font-size:11px;color:var(--amber);display:none">€ c/IVA</span>
+        </div>
       </div>
     </div>
 
@@ -688,24 +692,34 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <div class="orc-sec-title">Mão de obra & Outros</div>
       <div class="orc-item-row">
         <span class="orc-item-name">Mão de obra / Instalação</span>
-        <input class="orc-item-qty" type="number" step="0.01" id="orcLabour" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input class="orc-item-qty" type="number" step="0.01" id="orcLabour" placeholder="0.00" oninput="calcOrcTotal()" style="width:90px"/>
+          <span style="font-size:11px;color:var(--text3)">€ c/IVA</span>
+        </div>
       </div>
       <div class="orc-item-row">
         <span class="orc-item-name">Deslocação</span>
-        <input class="orc-item-qty" type="number" step="0.01" id="orcTravel" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input class="orc-item-qty" type="number" step="0.01" id="orcTravel" placeholder="0.00" oninput="calcOrcTotal()" style="width:90px"/>
+          <span style="font-size:11px;color:var(--text3)">€ c/IVA</span>
+        </div>
       </div>
       <div class="orc-item-row">
         <span class="orc-item-name" style="display:flex;flex-direction:column">
           Consumíveis
           <span style="font-size:10px;color:var(--text3)">parafusos, colas, vedas, espumas...</span>
         </span>
-        <input class="orc-item-qty" type="number" step="0.01" id="orcConsumables" placeholder="€" oninput="calcOrcTotal()" style="width:80px"/>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input class="orc-item-qty" type="number" step="0.01" id="orcConsumables" placeholder="0.00" oninput="calcOrcTotal()" style="width:90px"/>
+          <span style="font-size:11px;color:var(--text3)">€ c/IVA</span>
+        </div>
       </div>
     </div>
 
     <div class="orc-total-bar">
       <div class="orc-total-row" id="orcSubtotalRow" style="display:none"><span>Subtotal (s/ IVA)</span><span id="orcSubtotal">0.00 €</span></div>
       <div class="orc-total-row" id="orcIvaRow" style="display:none"><span>IVA 23%</span><span id="orcIva">0.00 €</span></div>
+      <div id="orcBreakdown" style="font-size:12px;color:var(--text3);margin-bottom:8px"></div>
       <div class="orc-total-row big"><span>Total (IVA incluído)</span><span id="orcTotalVal">0.00 €</span></div>
     </div>
 
@@ -1285,25 +1299,36 @@ window.renderDesktop=function(){
 
   } else if(currentTab==='orcamentos'){
     filtersEl.innerHTML='';
-    list.style.display='grid';
-    if(!orcamentos.length){list.innerHTML=`<div class="empty" style="grid-column:1/-1"><p>Nenhum orçamento ainda</p></div>`;return;}
+    list.style.display='block';
+    list.className='desktop-grid orc-grid';
+    if(!orcamentos.length){list.innerHTML=`<div class="empty"><p>Nenhum orçamento ainda</p></div>`;return;}
     const filtered=orcamentos.filter(o=>!q||(o.client||'').toLowerCase().includes(q)||(o.address||'').toLowerCase().includes(q));
-    list.innerHTML=filtered.map(o=>`
-      <div class="orc-card">
-        <div class="orc-header">
-          <div><div class="orc-name">${esc(o.client)}</div><div class="orc-date">${o.address?esc(o.address)+' · ':''} ${o.date||''}</div>
-          ${o.instType?`<div style="margin-top:4px"><span class="badge badge-cat">${o.instType==='completa'?'Instalação completa':'Instalação simples'}</span></div>`:''}</div>
-          <div><div class="orc-total-label">Total c/ IVA</div><div class="orc-total">${o.total?o.total.toFixed(2)+' €':'—'}</div></div>
+    list.innerHTML=filtered.map(o=>{
+      const acList=(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]);
+      return`<div class="orc-card" style="margin-bottom:0">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:17px;font-weight:700;color:var(--text)">${esc(o.client)}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:3px">${o.address?esc(o.address)+' · ':''} ${o.date||''}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+              ${o.instType?`<span class="badge badge-cat">${o.instType==='completa'?'Instalação completa':'Instalação simples'}</span>`:''}
+              ${o.tubeLength?`<span class="badge badge-cat">Tubagem: ${o.tubeLength}m</span>`:''}
+            </div>
+            <div style="margin-top:6px">${acList.map(u=>`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">❄️ ${esc(u.brand)} ${esc(u.model)} — ${u.btu} BTU${u.qty>1?' ×'+u.qty:''}</div>`).join('')}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:2px">Total c/ IVA</div>
+            <div style="font-size:24px;font-weight:700;color:var(--accent);letter-spacing:-.5px">${o.total?o.total.toFixed(2)+' €':'—'}</div>
+          </div>
         </div>
-        ${(o.acUnits&&o.acUnits.length?o.acUnits:o.acUnit?[o.acUnit]:[]).map(u=>`<div style="font-size:12px;color:var(--text2);margin-top:4px">❄️ ${esc(u.brand)} ${esc(u.model)} — ${u.btu} BTU${u.qty>1?' ×'+u.qty:''}</div>`).join('')}
-        <div class="orc-footer">
+        <div style="display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">
           <button class="orc-btn" onclick="deleteOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Apagar</button>
           <button class="orc-btn" onclick="editOrc('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
-          <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Relatório</button>
+          <button class="orc-btn" onclick="openReport('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Relatório</button>
           <button class="orc-btn" onclick="showPdf('${o.id}','client')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>PDF Cliente</button>
           <button class="orc-btn primary" onclick="showPdf('${o.id}','internal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF Interno</button>
         </div>
-      </div>`).join('');
+      </div>`;}).join('');
   }
 };
 
@@ -1606,6 +1631,8 @@ function updateServicesList(){
 window.toggleGasPrice = function(){
   const checked = document.getElementById('orcAddGas').checked;
   document.getElementById('orcGasPrice').style.display = checked?'block':'none';
+  const lbl = document.getElementById('orcGasPriceLabel');
+  if(lbl) lbl.style.display = checked?'inline':'none';
   calcOrcTotal();
 };
 
@@ -1927,16 +1954,26 @@ window.calcOrcTotal=function(){
     return acc+(s&&s.sellPrice?s.sellPrice*l.qty:0);
   },0);
   const consultTotal=updateConsultTotal();
-  // AC buy price (with IVA — fatura fornecedor ao cliente)
   const acBuyTotal=orcAcLines.reduce((acc,l)=>{
     const a=acItems.find(x=>x.id===l.acId);
     return acc+(a?(a.buyPrice||0)*(l.qty||1):0);
   },0)*1.23;
-  // All other values already include IVA — no extra IVA
   const total=acBuyTotal+consultTotal+stockTotal+labour+travel+consumables+gas;
-  document.getElementById('orcSubtotal').style.display='none';
-  const ivaRow=document.getElementById('orcIvaRow');
-  if(ivaRow) ivaRow.style.display='none';
+
+  // Breakdown
+  const bd = document.getElementById('orcBreakdown');
+  if(bd){
+    const parts = [];
+    if(acBuyTotal>0) parts.push(`Máquinas: ${acBuyTotal.toFixed(2)} €`);
+    if(consultTotal>0) parts.push(`Consultoria: ${consultTotal.toFixed(2)} €`);
+    if(stockTotal>0) parts.push(`Material: ${stockTotal.toFixed(2)} €`);
+    if(labour>0) parts.push(`Mão de obra: ${labour.toFixed(2)} €`);
+    if(travel>0) parts.push(`Deslocação: ${travel.toFixed(2)} €`);
+    if(consumables>0) parts.push(`Consumíveis: ${consumables.toFixed(2)} €`);
+    if(gas>0) parts.push(`Gás: ${gas.toFixed(2)} €`);
+    bd.innerHTML = parts.join(' &nbsp;+&nbsp; ');
+  }
+
   document.getElementById('orcTotalVal').textContent=total.toFixed(2)+' €';
 };
 
@@ -1997,7 +2034,9 @@ window.saveOrc=async function(){
   };
   const editId = document.getElementById('orcEditId')?.value;
   if(editId){
-    await updateDoc(doc(db,'ep_orc',editId),{...data,createdAt:undefined});
+    // Remove createdAt from update to preserve original
+    const {createdAt: _skip, ...updateData} = data;
+    await updateDoc(doc(db,'ep_orc',editId), updateData);
     closeModal('orcModal');
     document.getElementById('orcEditId').value='';
     document.getElementById('orcModalTitle').textContent='Novo orçamento';

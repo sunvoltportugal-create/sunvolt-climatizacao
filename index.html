@@ -2718,33 +2718,113 @@ let currentPdfRef = '';
 window.shareReport = async function(){
   const content = document.getElementById('pdfContent');
   if(!content) return;
-  // Use Web Share API if available
-  if(navigator.share){
-    try{
-      await navigator.share({
-        title: `${currentPdfType==='report'?'Relatório de instalação':'Orçamento'} — ${currentPdfClient}`,
-        text: `${currentPdfType==='report'?'Relatório de instalação':'Orçamento'} SunVolt · ${currentPdfClient} · Ref: ${currentPdfRef}\n\nPara ver o documento completo, abre o link ou solicita o PDF.`,
-      });
-    }catch(e){ showToast('Partilha cancelada'); }
-  } else {
-    // Fallback: copy text summary
-    const text = `${currentPdfType==='report'?'Relatório de instalação':'Orçamento'} SunVolt · ${currentPdfClient} · Ref: ${currentPdfRef}`;
-    navigator.clipboard?.writeText(text).then(()=>showToast('Copiado para a área de transferência'));
+  const type = currentPdfType==='report'?'Relatório de instalação':'Orçamento';
+  const title = `${type} — ${currentPdfClient}`;
+  const text = `${type} SunVolt · ${currentPdfClient} · Ref: ${currentPdfRef}`;
+
+  try{
+    showToast('A gerar PDF...');
+    const pdfBlob = await generatePdfBlob();
+    if(pdfBlob){
+      const fileName = `${type.replace(/\s/g,'_')}_${currentPdfClient.replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
+      const file = new File([pdfBlob], fileName, {type:'application/pdf'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title, text});
+        return;
+      }
+      // Fallback: download the PDF
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName; a.click();
+      URL.revokeObjectURL(url);
+      showToast('PDF descarregado');
+      return;
+    }
+  }catch(e){
+    if(e.name!=='AbortError') showToast('Erro ao gerar PDF');
   }
+  // Final fallback
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('Copiado'));
 };
 
-window.shareWhatsApp = function(){
+window.shareWhatsApp = async function(){
   const type = currentPdfType==='report' ? 'Relatório de instalação' : 'Orçamento';
-  const msg = encodeURIComponent(
-    `*${type} SunVolt*\n` +
+  const msg = `*${type} SunVolt*\n` +
     `Cliente: *${currentPdfClient}*\n` +
     `Ref: ${currentPdfRef}\n\n` +
     (currentPdfType==='report'
-      ? `✅ Instalação concluída e testada com sucesso.\nPara receber o relatório completo com fotos, contacte-nos.`
-      : `Para mais informações sobre este orçamento, contacte-nos.\n\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169 · sunvoltportugal@gmail.com_`)
-  );
-  window.open(`https://wa.me/?text=${msg}`, '_blank');
+      ? `✅ Instalação concluída e testada com sucesso.\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`
+      : `Para mais informações sobre este orçamento, contacte-nos.\n\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169 · sunvoltportugal@gmail.com_`);
+
+  // Try to generate PDF blob and share with file
+  try {
+    showToast('A gerar PDF...');
+    const pdfBlob = await generatePdfBlob();
+    if(pdfBlob && navigator.canShare && navigator.canShare({files:[new File([pdfBlob],'doc.pdf',{type:'application/pdf'})]})){
+      const fileName = `${type.replace(/\s/g,'_')}_${currentPdfClient.replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
+      const file = new File([pdfBlob], fileName, {type:'application/pdf'});
+      await navigator.share({
+        files: [file],
+        text: msg,
+        title: `${type} — ${currentPdfClient}`
+      });
+      return;
+    }
+  } catch(e){
+    // Fallback to WhatsApp link if share fails or not supported
+  }
+  // Fallback: open WhatsApp with text only
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
+
+async function generatePdfBlob(){
+  // Use html2canvas + jsPDF to generate a real PDF from the preview
+  const content = document.getElementById('pdfContent');
+  if(!content) return null;
+
+  // Dynamically load html2canvas and jsPDF
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+  const canvas = await html2canvas(content, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    logging: false
+  });
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const imgW = pageW;
+  const imgH = (canvas.height * pageW) / canvas.width;
+
+  let y = 0;
+  if(imgH <= pageH){
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, imgW, imgH);
+  } else {
+    // Multi-page
+    while(y < imgH){
+      if(y > 0) pdf.addPage();
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, -y, imgW, imgH);
+      y += pageH;
+    }
+  }
+  return pdf.output('blob');
+}
+
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    if(document.querySelector(`script[src="${src}"]`)){ resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
 
 // ---- UTILS ----
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}

@@ -578,23 +578,42 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <input class="field-input" id="acListPrice" type="number" step="0.01" placeholder="0.00" oninput="calcAcPrice()" style="background:var(--bg)"/>
         </div>
         <div>
-          <label class="field-label">Desconto compra (%)</label>
-          <input class="field-input" id="acDiscount" type="number" step="0.1" placeholder="Ex: 30" oninput="calcAcPrice()" style="background:var(--bg)"/>
+          <label class="field-label">IVA da tabela (%)</label>
+          <select class="field-select" id="acListVat" onchange="calcAcPrice()" style="background:var(--bg)">
+            <option value="0">Sem IVA (preço s/ IVA)</option>
+            <option value="23">Com IVA 23% (preço já c/ IVA)</option>
+          </select>
         </div>
       </div>
       <div class="field-row">
         <div>
-          <label class="field-label">Preço de compra (€)</label>
-          <input class="field-input" id="acBuyPrice" type="number" step="0.01" placeholder="0.00" oninput="calcAcSell()" style="background:var(--bg)"/>
+          <label class="field-label">Desconto compra (%)</label>
+          <input class="field-input" id="acDiscount" type="number" step="0.1" placeholder="Ex: 40" oninput="calcAcPrice()" style="background:var(--bg)"/>
         </div>
         <div>
           <label class="field-label">Margem de lucro (%)</label>
-          <input class="field-input" id="acMargin" type="number" step="0.1" placeholder="Ex: 25" oninput="calcAcSell()" style="background:var(--bg)"/>
+          <input class="field-input" id="acMargin" type="number" step="0.1" placeholder="Ex: 10" oninput="calcAcSell()" style="background:var(--bg)"/>
         </div>
       </div>
-      <div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:6px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:var(--text2)">Preço de venda ao cliente</span>
-        <span style="font-size:18px;font-weight:700;color:var(--green)" id="acSellPriceDisplay">0.00 €</span>
+      <div class="field-row">
+        <div>
+          <label class="field-label">Preço de compra s/ IVA (€)</label>
+          <input class="field-input" id="acBuyPrice" type="number" step="0.01" placeholder="0.00" oninput="calcAcSell()" style="background:var(--bg)"/>
+        </div>
+        <div>
+          <label class="field-label">Preço de compra c/ IVA (€)</label>
+          <input class="field-input" id="acBuyPriceVat" type="number" step="0.01" placeholder="0.00" readonly style="background:var(--surface2);color:var(--text3)"/>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;color:var(--text2)">Venda s/ IVA</span>
+          <span style="font-size:16px;font-weight:700;color:var(--green)" id="acSellPriceDisplay">0.00 €</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--text2)">Venda c/ IVA 23%</span>
+          <span style="font-size:16px;font-weight:700;color:var(--amber)" id="acSellPriceVatDisplay">0.00 €</span>
+        </div>
       </div>
       <input type="hidden" id="acSellPrice"/>
     </div>
@@ -1465,9 +1484,13 @@ window.setStockFilter=function(val){stockCatFilter=val;if(currentMode==='desktop
 window.calcAcPrice = function(){
   const list = parseFloat(document.getElementById('acListPrice').value)||0;
   const disc = parseFloat(document.getElementById('acDiscount').value)||0;
-  const buy = list * (1 - disc/100);
+  const vat = parseInt(document.getElementById('acListVat').value)||0;
+  // If price already includes IVA, remove it first to get s/IVA base
+  const listExVat = vat === 23 ? list / 1.23 : list;
+  const buy = listExVat * (1 - disc/100);
   if(buy > 0){
     document.getElementById('acBuyPrice').value = buy.toFixed(2);
+    document.getElementById('acBuyPriceVat').value = (buy * 1.23).toFixed(2);
     calcAcSell();
   }
 };
@@ -1476,8 +1499,10 @@ window.calcAcSell = function(){
   const buy = parseFloat(document.getElementById('acBuyPrice').value)||0;
   const margin = parseFloat(document.getElementById('acMargin').value)||0;
   const sell = margin > 0 ? buy / (1 - margin/100) : buy;
+  document.getElementById('acBuyPriceVat').value = (buy * 1.23).toFixed(2);
   document.getElementById('acSellPrice').value = sell.toFixed(2);
   document.getElementById('acSellPriceDisplay').textContent = sell.toFixed(2)+' €';
+  document.getElementById('acSellPriceVatDisplay').textContent = (sell * 1.23).toFixed(2)+' €';
 };
 
 window.calcHeatBtu = function(){
@@ -1507,6 +1532,7 @@ window.saveAC=async function(){
     gasType:document.getElementById('acGasType').value,
     features:document.getElementById('acFeatures').value.trim(),
     listPrice:parseFloat(document.getElementById('acListPrice').value)||0,
+    listVat:parseInt(document.getElementById('acListVat').value)||0,
     discount:parseFloat(document.getElementById('acDiscount').value)||0,
     buyPrice:parseFloat(document.getElementById('acBuyPrice').value)||0,
     margin:parseFloat(document.getElementById('acMargin').value)||0,
@@ -1521,7 +1547,7 @@ window.saveAC=async function(){
 
 function clearACForm(){
   ['acEditId','acBrand','acModel','acSeries','acCoolKw','acSeer','acCoolInput','acHeatBtu','acHeatKw','acScop',
-   'acPipeLiq','acPipeGas','acPipeDrain','acFeatures','acListPrice','acDiscount','acBuyPrice','acMargin','acSellPrice','acNotes'].forEach(id=>{
+   'acPipeLiq','acPipeGas','acPipeDrain','acFeatures','acListPrice','acDiscount','acBuyPrice','acBuyPriceVat','acMargin','acSellPrice','acNotes'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('acSellPriceDisplay').textContent='0.00 €';
@@ -1550,8 +1576,10 @@ window.editAC=function(id){
   document.getElementById('acGasType').value=a.gasType||'R32';
   document.getElementById('acFeatures').value=a.features||'';
   document.getElementById('acListPrice').value=a.listPrice||'';
+  document.getElementById('acListVat').value=a.listVat||0;
   document.getElementById('acDiscount').value=a.discount||'';
   document.getElementById('acBuyPrice').value=a.buyPrice||'';
+  document.getElementById('acBuyPriceVat').value=a.buyPrice?(a.buyPrice*1.23).toFixed(2):'';
   document.getElementById('acMargin').value=a.margin||'';
   document.getElementById('acSellPrice').value=a.sellPrice||'';
   document.getElementById('acSellPriceDisplay').textContent=(a.sellPrice||0).toFixed(2)+' €';

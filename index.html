@@ -667,13 +667,16 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <div id="orcAcLines"></div>
       <button onclick="addOrcAcLine()" style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">+ Adicionar unidade AC</button>
       <div id="orcConsultRow" style="display:none;margin-top:10px;background:var(--accent-light);border-radius:var(--radius-sm);padding:10px;border:1px solid rgba(61,142,240,.2)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div style="flex:1">
             <div style="font-size:12px;font-weight:600;color:var(--text)">Taxa de serviço/consultoria total</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Margem sobre todas as unidades AC</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Calculada pela margem — editável por orçamento</div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:18px;font-weight:700;color:var(--accent)" id="orcConsultVal">0.00 €</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <input type="number" step="0.01" id="orcConsultCustom" 
+              style="width:90px;height:34px;padding:0 8px;border-radius:6px;border:1.5px solid rgba(61,142,240,.4);background:white;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:var(--accent);text-align:right;outline:none"
+              oninput="onConsultCustomChange()" placeholder="0.00"/>
+            <span style="font-size:14px;font-weight:700;color:var(--accent)">€</span>
           </div>
         </div>
       </div>
@@ -825,6 +828,24 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="orc-section">
+      <div class="orc-sec-title">🔍 Deteção de fugas de gás</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px;background:var(--green-light);border-radius:var(--radius-sm);border:1px solid rgba(27,158,110,.2)">
+        <select class="field-select" id="rLeakResult" style="flex:1;height:36px;font-size:13px">
+          <option value="Sem fugas detetadas ✓">Sem fugas detetadas ✓</option>
+          <option value="Fuga detetada e corrigida ⚠️">Fuga detetada e corrigida ⚠️</option>
+          <option value="Fuga detetada — aguarda intervenção ✗">Fuga detetada — aguarda intervenção ✗</option>
+        </select>
+      </div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:8px">Fotos do teste de deteção</div>
+      <div id="leakPhotosGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+      <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        + Adicionar foto da deteção
+        <input type="file" accept="image/*" id="leakPhotoInput" onchange="addLeakPhoto(this)" style="display:none" multiple/>
+      </label>
     </div>
 
     <div class="orc-section">
@@ -1002,9 +1023,17 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <input class="field-input" id="rObservations" placeholder="Ex: Instalação sem anomalias, unidade a funcionar correctamente"/>
     </div>
 
+    <div style="margin-bottom:10px">
+      <button onclick="saveReportProgress()" style="width:100%;height:44px;border-radius:var(--radius-sm);border:1.5px solid var(--green);background:var(--green-light);color:var(--green);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar progresso
+      </button>
+      <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:5px">Guarda o progresso sem fechar — podes continuar depois</div>
+    </div>
+
     <div class="modal-actions">
-      <button class="modal-btn cancel" onclick="closeModal('reportModal')">Cancelar</button>
-      <button class="modal-btn confirm" onclick="saveAndShowReport()">Gerar relatório</button>
+      <button class="modal-btn cancel" onclick="closeModal('reportModal')">Fechar</button>
+      <button class="modal-btn confirm" onclick="saveAndShowReport()">Gerar relatório PDF</button>
     </div>
   </div>
 </div>
@@ -1778,11 +1807,23 @@ function updateConsultTotal(){
     if(!a) return sum;
     return sum+((a.sellPrice||0)-(a.buyPrice||0))*l.qty;
   },0);
-  document.getElementById('orcConsultRow').style.display=total>0?'block':'none';
-  document.getElementById('orcConsultVal').textContent=total.toFixed(2)+' €';
-  currentOrcConsultValue=total;
-  return total;
+  const customEl = document.getElementById('orcConsultCustom');
+  // Only auto-set if not manually edited
+  if(customEl && !customEl.dataset.edited){
+    customEl.value = total.toFixed(2);
+  }
+  const finalTotal = customEl ? (parseFloat(customEl.value)||0) : total;
+  document.getElementById('orcConsultRow').style.display=total>0||finalTotal>0?'block':'none';
+  currentOrcConsultValue=finalTotal;
+  return finalTotal;
 }
+
+window.onConsultCustomChange = function(){
+  const el = document.getElementById('orcConsultCustom');
+  if(el) el.dataset.edited = 'true';
+  currentOrcConsultValue = parseFloat(el?.value)||0;
+  calcOrcTotal();
+};
 
 window.openOrcBuilder=function(){
   clearOrcForm();
@@ -1804,6 +1845,7 @@ function clearOrcForm(){
   currentOrcAcMargin=0;
   currentInstType='completa';
   document.getElementById('orcConsultRow').style.display='none';
+  const cc=document.getElementById('orcConsultCustom');if(cc){cc.value='';cc.dataset.edited='';}
   document.getElementById('orcGasRow').style.display='none';
   document.getElementById('orcAddGas').checked=false;
   document.getElementById('orcGasPrice').style.display='none';
@@ -1823,54 +1865,67 @@ window.addOrcFreeLine=function(){
 };
 
 function renderOrcStockLines(){
-  document.getElementById('orcStockItems').innerHTML=orcStockLines.map((l,i)=>`
-    <div class="orc-item-row" style="align-items:flex-start;flex-wrap:wrap;gap:6px;padding:8px 0">
-      ${l.free?`
-        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0">
-          <input class="field-input" placeholder="Nome do material" value="${esc(l.name||'')}" id="osl-name-${i}" oninput="updateOrcLine(${i})" style="height:32px;font-size:12px"/>
-          <div style="display:flex;gap:4px">
-            <input class="orc-item-qty" type="number" min="0" step="0.01" value="${l.price||0}" id="osl-price-free-${i}" oninput="updateOrcLine(${i})" placeholder="€/un" style="width:70px" title="Preço unitário"/>
-            <select id="osl-unit-${i}" onchange="updateOrcLine(${i})" style="height:32px;padding:0 6px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:12px">
-              <option ${(l.unit||'un')==='un'?'selected':''}>un</option>
-              <option ${l.unit==='m'?'selected':''}>m</option>
-              <option ${l.unit==='rolo'?'selected':''}>rolo</option>
-              <option ${l.unit==='vg'?'selected':''}>vg</option>
-            </select>
-          </div>
-        </div>`:`
-        <select class="field-select" id="osl-id-${i}" onchange="updateOrcLine(${i})" style="height:32px;font-size:12px;flex:1">
-          <option value="">— Material do stock —</option>
-          ${stockItems.map(s=>`<option value="${s.id}" ${l.stockId===s.id?'selected':''}>${esc(s.name)} (${s.sellPrice?s.sellPrice.toFixed(2)+' €/'+s.unit:'s/preço'})</option>`).join('')}
-        </select>`}
-      <input class="orc-item-qty" type="number" min="1" value="${l.qty}" id="osl-qty-${i}" oninput="updateOrcLine(${i})" style="width:52px" title="Quantidade"/>
-      <span class="orc-item-price" id="osl-price-${i}" style="min-width:52px;text-align:right">${calcLinePrice(l)}</span>
-      <button onclick="removeOrcLine(${i})" style="width:26px;height:26px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:16px">×</button>
-    </div>`).join('');
+  document.getElementById('orcStockItems').innerHTML=orcStockLines.map((l,i)=>{
+    const stockItem = l.free ? null : stockItems.find(x=>x.id===l.stockId);
+    const unitLabel = l.free ? (l.unit||'un') : (stockItem?.unit||'un');
+    const customPrice = l.customPrice !== undefined ? l.customPrice : (l.free ? (l.price||0) : (stockItem?.sellPrice||0));
+    return`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        ${l.free?`
+          <input class="field-input" placeholder="Nome do material" value="${esc(l.name||'')}" id="osl-name-${i}" oninput="updateOrcLine(${i})" style="height:32px;font-size:13px;flex:1"/>
+          <select id="osl-unit-${i}" onchange="updateOrcLine(${i})" style="height:32px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:12px;flex-shrink:0">
+            <option ${ (l.unit||'un')==='un'?'selected':''}>un</option>
+            <option ${l.unit==='m'?'selected':''}>m</option>
+            <option ${l.unit==='rolo'?'selected':''}>rolo</option>
+            <option ${l.unit==='vg'?'selected':''}>vg</option>
+          </select>`:`
+          <select class="field-select" id="osl-id-${i}" onchange="updateOrcLine(${i})" style="height:32px;font-size:13px;flex:1">
+            <option value="">— Material do stock —</option>
+            ${stockItems.map(s=>`<option value="${s.id}" ${l.stockId===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}
+          </select>`}
+        <button onclick="removeOrcLine(${i})" style="width:28px;height:28px;border:none;background:var(--surface2);color:var(--text3);cursor:pointer;font-size:16px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center">×</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:var(--text3)">Qtd</span>
+          <input class="orc-item-qty" type="number" min="0.01" step="0.01" value="${l.qty||1}" id="osl-qty-${i}" oninput="updateOrcLine(${i})" style="width:56px"/>
+          <span style="font-size:11px;color:var(--text3)">${unitLabel}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;margin-left:8px">
+          <span style="font-size:11px;color:var(--text3)">€/un</span>
+          <input class="orc-item-qty" type="number" min="0" step="0.01" value="${customPrice}" id="osl-unitprice-${i}" oninput="updateOrcLine(${i})" style="width:70px" title="Preço unitário (editável)"/>
+        </div>
+        <span style="margin-left:auto;font-size:14px;font-weight:700;color:var(--accent)" id="osl-price-${i}">${(customPrice*(l.qty||1)).toFixed(2)} €</span>
+      </div>
+    </div>`;}).join('');
 }
 
 function calcLinePrice(l){
-  if(l.free){
-    const p=parseFloat(l.price)||0;
-    return p>0?(p*l.qty).toFixed(2)+' €':'—';
-  }
-  const s=stockItems.find(x=>x.id===l.stockId);
-  if(!s||!s.sellPrice)return'—';
-  return(s.sellPrice*l.qty).toFixed(2)+' €';
+  const p = l.customPrice !== undefined ? l.customPrice : (l.free ? (l.price||0) : (stockItems.find(x=>x.id===l.stockId)?.sellPrice||0));
+  return p>0?(p*l.qty).toFixed(2)+' €':'—';
 }
 
 window.updateOrcLine=function(i){
   const l=orcStockLines[i];
   if(l.free){
     l.name=(document.getElementById(`osl-name-${i}`)?.value||'').trim();
-    l.price=parseFloat(document.getElementById(`osl-price-free-${i}`)?.value)||0;
     l.unit=document.getElementById(`osl-unit-${i}`)?.value||'un';
   } else {
-    l.stockId=document.getElementById(`osl-id-${i}`)?.value||'';
+    const newId=document.getElementById(`osl-id-${i}`)?.value||'';
+    if(newId!==l.stockId){
+      l.stockId=newId;
+      // Reset custom price when stock item changes
+      delete l.customPrice;
+    }
   }
   l.qty=parseFloat(document.getElementById(`osl-qty-${i}`)?.value)||1;
-  const price=calcLinePrice(l);
+  // Read custom unit price
+  const unitPriceEl=document.getElementById(`osl-unitprice-${i}`);
+  if(unitPriceEl) l.customPrice=parseFloat(unitPriceEl.value)||0;
+  if(l.free) l.price=l.customPrice||0;
+  const total=(l.customPrice||0)*l.qty;
   const priceEl=document.getElementById(`osl-price-${i}`);
-  if(priceEl) priceEl.textContent=price;
+  if(priceEl) priceEl.textContent=total.toFixed(2)+' €';
   calcOrcTotal();
 };
 
@@ -1905,6 +1960,10 @@ window.editOrc = function(id){
   } else {
     setInstType('completa', document.getElementById('instTypeCompleta'));
   }
+
+  // Consultoria custom
+  const ccEl=document.getElementById('orcConsultCustom');
+  if(ccEl&&o.consultVal){ccEl.value=o.consultVal.toFixed(2);ccEl.dataset.edited='true';}
 
   // Gas
   if(o.gasAdded){
@@ -1949,9 +2008,8 @@ window.calcOrcTotal=function(){
   const gasAdded=document.getElementById('orcAddGas').checked;
   const gas=gasAdded?parseFloat(document.getElementById('orcGasPrice').value)||0:0;
   const stockTotal=orcStockLines.reduce((acc,l)=>{
-    if(l.free) return acc+((l.price||0)*l.qty);
-    const s=stockItems.find(x=>x.id===l.stockId);
-    return acc+(s&&s.sellPrice?s.sellPrice*l.qty:0);
+    const p = l.customPrice !== undefined ? l.customPrice : (l.free ? (l.price||0) : (stockItems.find(x=>x.id===l.stockId)?.sellPrice||0));
+    return acc+(p*l.qty);
   },0);
   const consultTotal=updateConsultTotal();
   const acBuyTotal=orcAcLines.reduce((acc,l)=>{
@@ -1997,13 +2055,13 @@ window.saveOrc=async function(){
   const consumables=parseFloat(document.getElementById('orcConsumables').value)||0;
 
   const stockLines=orcStockLines.map(l=>{
+    const p = l.customPrice !== undefined ? l.customPrice : (l.free ? (l.price||0) : (stockItems.find(x=>x.id===l.stockId)?.sellPrice||0));
     if(l.free){
-      const p=l.price||0;
       if(!l.name) return null;
       return {name:l.name,qty:l.qty,unit:l.unit||'un',price:p,total:p*l.qty,free:true};
     }
     const s=stockItems.find(x=>x.id===l.stockId);
-    return s?{name:s.name,qty:l.qty,unit:s.unit||'un',price:s.sellPrice||0,total:(s.sellPrice||0)*l.qty}:null;
+    return s?{name:s.name,qty:l.qty,unit:s.unit||'un',price:p,total:p*l.qty}:null;
   }).filter(Boolean);
 
   const stockTotal=stockLines.reduce((a,l)=>a+l.total,0);
@@ -2086,6 +2144,7 @@ const CLOUD_NAME = 'zh5oqy9f';
 const UPLOAD_PRESET = 'sunvolt_uploads';
 let reportPhotos = {int: null, ext: null, tube: null, elec: null, p10: null, p20: null, p40: null, vacuum: null, cold: null, hot: null, serialInt: null, serialExt: null, elecInt: null, elecExt: null, finalInt: null, finalExt: null};
 let extraPhotos = [];
+let leakPhotos = [];
 
 window.uploadPhoto = async function(type, input){
   const file = input.files[0];
@@ -2111,6 +2170,11 @@ window.uploadPhoto = async function(type, input){
 function resetPhotos(){
   reportPhotos = {int:null, ext:null, tube:null, elec:null, p10:null, p20:null, p40:null, vacuum:null, cold:null, hot:null, serialInt:null, serialExt:null, elecInt:null, elecExt:null, finalInt:null, finalExt:null};
   extraPhotos = [];
+  leakPhotos = [];
+  const lpGrid = document.getElementById('leakPhotosGrid');
+  if(lpGrid) lpGrid.innerHTML='';
+  const lpInput = document.getElementById('leakPhotoInput');
+  if(lpInput) lpInput.value='';
   const epGrid = document.getElementById('extraPhotosGrid');
   if(epGrid) epGrid.innerHTML='';
   const epInput = document.getElementById('extraPhotoInput');
@@ -2149,6 +2213,11 @@ window.openReport = function(id){
   document.getElementById('rp20').value='OK ✓';
   document.getElementById('rp40').value='OK ✓';
   resetPhotos();
+  // Restore saved progress if exists
+  if(o.report){
+    restoreReportData(o.report);
+    if(o.report.draft) showToast('Progresso anterior restaurado ✓');
+  }
   openModal('reportModal');
 };
 
@@ -2171,6 +2240,40 @@ window.addExtraPhoto = async function(input){
   input.value='';
 };
 
+window.addLeakPhoto = async function(input){
+  const files = Array.from(input.files);
+  for(const file of files){
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    try{
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:formData});
+      const data = await res.json();
+      if(data.secure_url){
+        leakPhotos.push(data.secure_url);
+        renderLeakPhotos();
+        showToast('Foto adicionada!');
+      }
+    }catch(e){ showToast('Erro ao carregar foto'); }
+  }
+  input.value='';
+};
+
+function renderLeakPhotos(){
+  const grid = document.getElementById('leakPhotosGrid');
+  if(!grid) return;
+  grid.innerHTML = leakPhotos.map((url, i)=>`
+    <div style="position:relative">
+      <img src="${url}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px"/>
+      <button onclick="removeLeakPhoto(${i})" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center">×</button>
+    </div>`).join('');
+}
+
+window.removeLeakPhoto = function(i){
+  leakPhotos.splice(i,1);
+  renderLeakPhotos();
+};
+
 function renderExtraPhotos(){
   const grid = document.getElementById('extraPhotosGrid');
   if(!grid) return;
@@ -2186,10 +2289,8 @@ window.removeExtraPhoto = function(i){
   renderExtraPhotos();
 };
 
-window.saveAndShowReport = async function(){
-  const o = orcamentos.find(x=>x.id===currentReportOrcId);
-  if(!o) return;
-  const reportData = {
+function collectReportData(){
+  return {
     p10: document.getElementById('rp10').value,
     p10time: document.getElementById('rp10time').value,
     p20: document.getElementById('rp20').value,
@@ -2209,8 +2310,74 @@ window.saveAndShowReport = async function(){
     observations: document.getElementById('rObservations').value,
     photos: {...reportPhotos},
     extraPhotos: [...extraPhotos],
+    leakResult: document.getElementById('rLeakResult')?.value||'Sem fugas detetadas ✓',
+    leakPhotos: [...leakPhotos],
     reportDate: new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'})
   };
+}
+
+function restoreReportData(r){
+  if(!r) return;
+  if(r.p10) document.getElementById('rp10').value=r.p10;
+  if(r.p10time) document.getElementById('rp10time').value=r.p10time;
+  if(r.p20) document.getElementById('rp20').value=r.p20;
+  if(r.p20time) document.getElementById('rp20time').value=r.p20time;
+  if(r.p40) document.getElementById('rp40').value=r.p40;
+  if(r.p40time) document.getElementById('rp40time').value=r.p40time;
+  if(r.vacuum) document.getElementById('rVacuum').value=r.vacuum;
+  if(r.vacuumTime) document.getElementById('rVacuumTime').value=r.vacuumTime;
+  if(r.gasAdded){
+    document.getElementById('rGasAdded').checked=true;
+    document.getElementById('rGasFields').style.display='block';
+  }
+  if(r.gasQty) document.getElementById('rGasQty').value=r.gasQty;
+  if(r.gasType && document.getElementById('rGasType')) document.getElementById('rGasType').value=r.gasType;
+  if(r.coldIn) document.getElementById('rColdIn').value=r.coldIn;
+  if(r.coldOut) document.getElementById('rColdOut').value=r.coldOut;
+  if(r.hotIn) document.getElementById('rHotIn').value=r.hotIn;
+  if(r.hotOut) document.getElementById('rHotOut').value=r.hotOut;
+  if(r.ambient) document.getElementById('rAmbient').value=r.ambient;
+  if(r.observations) document.getElementById('rObservations').value=r.observations;
+  // Restore photos
+  if(r.photos){
+    Object.keys(r.photos).forEach(key=>{
+      if(r.photos[key]){
+        reportPhotos[key]=r.photos[key];
+        const pre=document.getElementById(`photo${key.charAt(0).toUpperCase()+key.slice(1)}Preview`);
+        if(pre) pre.innerHTML=`<img src="${r.photos[key]}" style="width:100%;height:100%;object-fit:cover"/>`;
+        const lbl=document.getElementById(`photo${key.charAt(0).toUpperCase()+key.slice(1)}Label`);
+        if(lbl) lbl.textContent='✓ Foto carregada';
+      }
+    });
+  }
+  // Restore extra photos
+  if(r.extraPhotos&&r.extraPhotos.length){
+    extraPhotos=[...r.extraPhotos];
+    renderExtraPhotos();
+  }
+  // Restore leak photos
+  if(r.leakResult && document.getElementById('rLeakResult')) document.getElementById('rLeakResult').value=r.leakResult;
+  if(r.leakPhotos&&r.leakPhotos.length){
+    leakPhotos=[...r.leakPhotos];
+    renderLeakPhotos();
+  }
+}
+
+window.saveReportProgress = async function(){
+  if(!currentReportOrcId) return;
+  const reportData = collectReportData();
+  reportData.draft = true;
+  try{
+    await updateDoc(doc(db,'ep_orc',currentReportOrcId),{report:reportData});
+    showToast('Progresso guardado ✓');
+  }catch(e){ showToast('Erro ao guardar'); }
+};
+
+window.saveAndShowReport = async function(){
+  const o = orcamentos.find(x=>x.id===currentReportOrcId);
+  if(!o) return;
+  const reportData = collectReportData();
+  reportData.draft = false;
   await updateDoc(doc(db,'ep_orc',currentReportOrcId),{report:reportData});
   closeModal('reportModal');
   showReportPdf(o, reportData);
@@ -2262,6 +2429,19 @@ function showReportPdf(o, r){
       ${r.gasAdded?`<div style="margin-bottom:14px;padding:10px;background:#fff8e8;border-radius:8px;font-size:12px;border:1px solid #f0c060">
         <div style="font-weight:600;margin-bottom:2px">⚠️ Carga de gás adicional</div>
         <div style="color:#7a5500">Adicionados ${r.gasQty||'—'} g de ${r.gasType} por comprimento de tubagem superior a 5m</div>
+      </div>`:''}
+
+      <div style="margin-bottom:14px;padding:10px;border-radius:8px;font-size:12px;border:1px solid ${(r.leakResult||'').includes('✓')?'#b7dfcc':'#f5c6cb'};background:${(r.leakResult||'').includes('✓')?'#e8f5ee':'#ffeaea'}">
+        <div style="font-weight:600;margin-bottom:2px">🔍 Deteção de fugas de gás</div>
+        <div style="color:${(r.leakResult||'').includes('✓')?'#1a7a50':'#c0392b'}">${r.leakResult||'Sem fugas detetadas ✓'}</div>
+      </div>
+
+      ${r.leakPhotos&&r.leakPhotos.length?`
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">📸 Fotos — Deteção de fugas</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          ${r.leakPhotos.map(url=>`<img src="${url}" style="width:100%;border-radius:6px;object-fit:cover;aspect-ratio:1"/>`).join('')}
+        </div>
       </div>`:''}
 
       <table class="pdf-table">

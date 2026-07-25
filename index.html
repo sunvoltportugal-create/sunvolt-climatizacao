@@ -9,23 +9,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#0F1117;
-  --surface:#1A1D27;
-  --surface2:#222536;
-  --surface3:#2A2E40;
-  --border:rgba(255,255,255,0.07);
-  --border2:rgba(255,255,255,0.13);
-  --text:#F0F2F8;
-  --text2:#8B90A8;
-  --text3:#555B75;
-  --accent:#3D8EF0;
-  --accent-light:rgba(61,142,240,0.12);
-  --green:#2ECC8A;
-  --green-light:rgba(46,204,138,0.12);
-  --amber:#F0A633;
-  --amber-light:rgba(240,166,51,0.12);
-  --red:#E05C6A;
-  --red-light:rgba(224,92,106,0.12);
+  --bg:#F5F7FA;
+  --surface:#FFFFFF;
+  --surface2:#EEF1F6;
+  --surface3:#E4E8F0;
+  --border:rgba(0,0,0,0.07);
+  --border2:rgba(0,0,0,0.13);
+  --text:#1A1D2E;
+  --text2:#5A6080;
+  --text3:#9299B5;
+  --accent:#2D7DD2;
+  --accent-light:rgba(45,125,210,0.10);
+  --green:#1B9E6E;
+  --green-light:rgba(27,158,110,0.10);
+  --amber:#C47F17;
+  --amber-light:rgba(196,127,23,0.10);
+  --red:#C0392B;
+  --red-light:rgba(192,57,43,0.10);
   --radius:14px;
   --radius-sm:9px;
 }
@@ -42,7 +42,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .cfg-input{width:100%;height:48px;padding:0 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;margin-bottom:16px}
 .cfg-input:focus{border-color:var(--accent)}
 .cfg-btn{width:100%;height:50px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.3px}
-.cfg-note{font-size:12px;color:var(--text3);text-align:center;margin-top:18px;line-height:1.7}
+.cfg-note{font-size:12px;color:var(--text2);text-align:center;margin-top:18px;line-height:1.7}
 .cfg-note a{color:var(--accent);text-decoration:none}
 
 /* LAYOUT */
@@ -51,23 +51,23 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 #appWrap.desktop-mode{max-width:100%;flex-direction:row;height:100vh}
 
 /* DESKTOP SIDEBAR */
-.desktop-sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:32px 0 0}
+.desktop-sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border2);display:flex;flex-direction:column;padding:32px 0 0}
 .desktop-sidebar .app-brand{padding:0 24px 28px;font-size:24px;font-weight:700;letter-spacing:-.5px;border-bottom:1px solid var(--border)}
 .desktop-sidebar .app-brand span{color:var(--accent)}
 .desktop-nav{padding:16px 12px;flex:1}
 .desktop-nav-btn{width:100%;height:42px;border-radius:var(--radius-sm);border:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:10px;padding:0 12px;margin-bottom:4px;transition:all .15s}
 .desktop-nav-btn:hover{background:var(--surface2);color:var(--text)}
-.desktop-nav-btn.active{background:var(--accent-light);color:var(--accent)}
+.desktop-nav-btn.active{background:var(--accent-light);color:var(--accent);font-weight:600}
 .desktop-nav-btn svg{width:16px;height:16px}
 .desktop-sidebar-footer{padding:16px 24px 24px;border-top:1px solid var(--border)}
 
 /* DESKTOP MAIN */
 .desktop-main{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg)}
-.desktop-top-bar{padding:20px 32px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.desktop-top-bar{padding:24px 32px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--border)}
 .desktop-top-title{font-size:22px;font-weight:700;letter-spacing:-.5px}
 .desktop-content{flex:1;overflow-y:auto;padding:20px 32px 40px}
 .desktop-content::-webkit-scrollbar{width:6px}
-.desktop-content::-webkit-scrollbar-track{background:transparent}
+.desktop-content::-webkit-scrollbar-track{background:var(--bg)}
 .desktop-content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
 /* DESKTOP CARDS GRID */
@@ -82,7 +82,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .mode-sub{font-size:14px;color:var(--text2);margin-bottom:48px}
 .mode-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:560px}
 .mode-card{flex:1;min-width:200px;max-width:240px;background:var(--surface);border:1.5px solid var(--border2);border-radius:var(--radius);padding:24px 20px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
-.mode-card:hover{border-color:var(--accent);background:var(--accent-light);transform:translateY(-2px)}
+.mode-card:hover{border-color:var(--accent);background:var(--accent-light);transform:translateY(-2px);box-shadow:0 4px 16px rgba(45,125,210,.15)}
 .mode-card svg{width:40px;height:40px;color:var(--accent)}
 .mode-card-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
 .mode-card-desc{font-size:12px;color:var(--text3);line-height:1.5}
@@ -90,13 +90,13 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .mode-remember input{accent-color:var(--accent)}
 
 /* HEADER */
-.app-header{padding:52px 18px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.app-header{padding:52px 18px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border)}
 .app-brand{font-size:22px;font-weight:700;letter-spacing:-.5px}
 .app-brand span{color:var(--accent)}
-.header-badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(61,142,240,.2)}
+.header-badge{background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(45,125,210,.25)}
 
 /* TABS */
-.tabs{display:flex;margin:0 18px 14px;background:var(--surface);border-radius:var(--radius-sm);padding:3px;gap:2px;flex-shrink:0;border:1px solid var(--border)}
+.tabs{display:flex;margin:0 18px 14px;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;gap:2px;flex-shrink:0;border:1px solid var(--border2)}
 .tab{flex:1;height:34px;border-radius:7px;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
 .tab svg{width:13px;height:13px}
 .tab.active{background:var(--surface3);color:var(--text)}
@@ -108,7 +108,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .view::-webkit-scrollbar{display:none}
 
 /* SECTION HEADER */
-.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:sticky;top:0;z-index:10;padding:8px 0;background:var(--bg)}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:sticky;top:0;z-index:10;padding:8px 0;background:var(--bg);}
 .sec-title{font-size:16px;font-weight:600;letter-spacing:-.3px}
 .sec-count{font-size:12px;color:var(--text3);margin-left:6px}
 .btn-add{height:36px;padding:0 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -116,7 +116,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 
 /* SEARCH */
 .search-bar{position:relative;margin-bottom:12px}
-.search-bar input{width:100%;height:40px;padding:0 14px 0 38px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none}
+.search-bar input{width:100%;height:40px;padding:0 14px 0 38px;border-radius:var(--radius-sm);border:1.5px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none}
 .search-bar input:focus{border-color:var(--accent)}
 .search-bar svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text3)}
 
@@ -127,26 +127,26 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .fpill.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* CARDS */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;transition:border-color .15s}
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,.04);padding:14px;margin-bottom:8px;transition:border-color .15s}
 .card:hover{border-color:var(--border2)}
 .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
 .card-name{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.2px}
 .card-ref{font-size:11px;color:var(--text3);margin-top:2px}
 .card-actions{display:flex;gap:4px;flex-shrink:0}
-.icon-btn{width:30px;height:30px;border:1px solid var(--border2);background:transparent;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
+.icon-btn{width:30px;height:30px;border:1px solid var(--border2);background:var(--surface2);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .15s}
 .icon-btn:hover{border-color:var(--border2);background:var(--surface2)}
 .icon-btn svg{width:13px;height:13px}
 .icon-btn.danger:hover{color:var(--red);border-color:var(--red-light)}
 .card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:6px}
-.badge-cat{background:var(--surface3);color:var(--text2)}
+.badge-cat{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
 .badge-stock{background:var(--green-light);color:var(--green)}
 .badge-low{background:var(--amber-light);color:var(--amber)}
 .badge-zero{background:var(--red-light);color:var(--red)}
 .price-tag{font-size:13px;font-weight:600;color:var(--text);margin-left:auto}
 
 /* AC CARD */
-.ac-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
+.ac-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,.04);padding:14px;margin-bottom:8px}
 .ac-brand-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:3px 8px;border-radius:5px;margin-bottom:8px;display:inline-block}
 .ac-model{font-size:15px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
 .ac-specs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -158,7 +158,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .ac-price-val.green{color:var(--green)}
 
 /* ORÇAMENTO */
-.orc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
+.orc-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,.06);padding:14px;margin-bottom:8px}
 .orc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
 .orc-name{font-size:14px;font-weight:600}
 .orc-date{font-size:11px;color:var(--text3);margin-top:2px}
@@ -176,7 +176,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .empty p{font-size:13px}
 
 /* NAV */
-.nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;background:rgba(15,17,23,.92);backdrop-filter:blur(14px);border-top:1px solid var(--border);display:flex;padding:10px 0 26px}
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;background:rgba(245,247,250,.92);backdrop-filter:blur(14px);border-top:1px solid var(--border);display:flex;padding:10px 0 26px}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px;border:none;background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:10px;font-weight:500;transition:color .2s}
 .nav-btn.active{color:var(--accent)}
 .nav-btn svg{width:22px;height:22px}
@@ -184,16 +184,16 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;display:none;align-items:flex-end;justify-content:center;max-width:430px;margin:0 auto}
 .modal-overlay.show{display:flex}
-.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px 40px;width:100%;max-height:92vh;overflow-y:auto}
+.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border2);padding:20px 20px 40px;width:100%;max-height:92vh;overflow-y:auto}
 .modal-sheet::-webkit-scrollbar{display:none}
 .modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px}
 .modal-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-.3px}
 .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
 .field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);display:block;margin-bottom:6px;margin-top:14px}
 .field-label:first-of-type{margin-top:0}
-.field-input{width:100%;height:46px;padding:0 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none}
+.field-input{width:100%;height:46px;padding:0 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none}
 .field-input:focus{border-color:var(--accent)}
-.field-select{width:100%;height:46px;padding:0 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;appearance:none}
+.field-select{width:100%;height:46px;padding:0 13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);font-family:'Inter',sans-serif;font-size:14px;color:var(--text);outline:none;appearance:none}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .modal-actions{display:flex;gap:8px;margin-top:20px}
 .modal-btn{flex:1;height:48px;border-radius:var(--radius-sm);border:none;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
@@ -208,7 +208,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 .orc-item-name{flex:1;font-size:13px;color:var(--text)}
 .orc-item-qty{width:56px;height:32px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);outline:none;text-align:center}
 .orc-item-price{font-size:13px;font-weight:600;color:var(--text);min-width:60px;text-align:right}
-.orc-total-bar{background:var(--surface3);border-radius:var(--radius-sm);padding:14px;margin-top:14px}
+.orc-total-bar{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;margin-top:14px;border:1px solid var(--border2)}
 .orc-total-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px}
 .orc-total-row.big{font-size:16px;font-weight:700;color:var(--text);margin-bottom:0}
 .orc-total-row.big span:last-child{color:var(--accent)}
@@ -307,7 +307,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
         <div class="sync-dot" id="syncDot"></div>
         <span style="font-size:12px;color:var(--text3)">Sincronizado</span>
       </div>
-      <div style="font-size:12px;color:var(--text2);font-weight:500">Bruno Sequeira · TRIESP</div>
+      <div style="font-size:12px;color:var(--text);font-weight:600">Bruno Sequeira · TRIESP</div>
       <button onclick="switchMode()" style="margin-top:12px;width:100%;height:30px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer">⇄ Mudar modo</button>
       <button onclick="seedACUnitsIfEmpty()" style="margin-top:6px;width:100%;height:30px;border-radius:6px;border:1px solid var(--green);background:transparent;color:var(--green);font-family:'Inter',sans-serif;font-size:11px;cursor:pointer">+ Importar catálogo AC</button>
     </div>
@@ -752,7 +752,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <label style="width:100%;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="photop10Label">Foto manómetro 10 bar</span>
-        <input type="file" accept="image/*" capture="environment" id="photop10Input" onchange="uploadPhoto('p10',this)" style="display:none"/>
+        <input type="file" accept="image/*" id="photop10Input" onchange="uploadPhoto('p10',this)" style="display:none"/>
       </label>
 
       <div class="field-row">
@@ -768,7 +768,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <label style="width:100%;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="photop20Label">Foto manómetro 20 bar</span>
-        <input type="file" accept="image/*" capture="environment" id="photop20Input" onchange="uploadPhoto('p20',this)" style="display:none"/>
+        <input type="file" accept="image/*" id="photop20Input" onchange="uploadPhoto('p20',this)" style="display:none"/>
       </label>
 
       <div class="field-row">
@@ -784,7 +784,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <label style="width:100%;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="photop40Label">Foto manómetro 40 bar</span>
-        <input type="file" accept="image/*" capture="environment" id="photop40Input" onchange="uploadPhoto('p40',this)" style="display:none"/>
+        <input type="file" accept="image/*" id="photop40Input" onchange="uploadPhoto('p40',this)" style="display:none"/>
       </label>
     </div>
 
@@ -803,7 +803,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <label style="width:100%;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="photovacuumLabel">Foto leitura de vácuo</span>
-        <input type="file" accept="image/*" capture="environment" id="photovacuumInput" onchange="uploadPhoto('vacuum',this)" style="display:none"/>
+        <input type="file" accept="image/*" id="photovacuumInput" onchange="uploadPhoto('vacuum',this)" style="display:none"/>
       </label>
     </div>
 
@@ -842,7 +842,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <label style="width:100%;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="photocoldLabel">Foto termómetro modo frio</span>
-        <input type="file" accept="image/*" capture="environment" id="photocoldInput" onchange="uploadPhoto('cold',this)" style="display:none"/>
+        <input type="file" accept="image/*" id="photocoldInput" onchange="uploadPhoto('cold',this)" style="display:none"/>
       </label>
       <div class="field-row">
         <div>
@@ -857,7 +857,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
       <label style="width:100%;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span id="photohotLabel">Foto termómetro modo quente</span>
-        <input type="file" accept="image/*" capture="environment" id="photohotInput" onchange="uploadPhoto('hot',this)" style="display:none"/>
+        <input type="file" accept="image/*" id="photohotInput" onchange="uploadPhoto('hot',this)" style="display:none"/>
       </label>
       <label class="field-label">Temperatura ambiente no momento do teste (°C)</label>
       <input class="field-input" id="rAmbient" type="number" step="0.1" placeholder="Ex: 20"/>
@@ -874,7 +874,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoIntLabel">Tirar/escolher foto</span>
-            <input type="file" accept="image/*" capture="environment" id="photoIntInput" onchange="uploadPhoto('int',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoIntInput" onchange="uploadPhoto('int',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -885,7 +885,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoExtLabel">Tirar/escolher foto</span>
-            <input type="file" accept="image/*" capture="environment" id="photoExtInput" onchange="uploadPhoto('ext',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoExtInput" onchange="uploadPhoto('ext',this)" style="display:none"/>
           </label>
         </div>
       </div>
@@ -898,7 +898,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoTubeLabel">Tirar/escolher foto</span>
-            <input type="file" accept="image/*" capture="environment" id="photoTubeInput" onchange="uploadPhoto('tube',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoTubeInput" onchange="uploadPhoto('tube',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -909,7 +909,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoElecLabel">Tirar/escolher foto</span>
-            <input type="file" accept="image/*" capture="environment" id="photoElecInput" onchange="uploadPhoto('elec',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoElecInput" onchange="uploadPhoto('elec',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -920,7 +920,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoSerialIntLabel">Nº série int.</span>
-            <input type="file" accept="image/*" capture="environment" id="photoSerialIntInput" onchange="uploadPhoto('serialInt',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoSerialIntInput" onchange="uploadPhoto('serialInt',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -931,7 +931,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoSerialExtLabel">Nº série ext.</span>
-            <input type="file" accept="image/*" capture="environment" id="photoSerialExtInput" onchange="uploadPhoto('serialExt',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoSerialExtInput" onchange="uploadPhoto('serialExt',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -942,7 +942,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoElecIntLabel">Ligações int.</span>
-            <input type="file" accept="image/*" capture="environment" id="photoElecIntInput" onchange="uploadPhoto('elecInt',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoElecIntInput" onchange="uploadPhoto('elecInt',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -953,7 +953,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoElecExtLabel">Ligações ext.</span>
-            <input type="file" accept="image/*" capture="environment" id="photoElecExtInput" onchange="uploadPhoto('elecExt',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoElecExtInput" onchange="uploadPhoto('elecExt',this)" style="display:none"/>
           </label>
         </div>
       </div>
@@ -970,7 +970,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--green);background:var(--green-light);color:var(--green);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoFinalIntLabel">Foto final interna</span>
-            <input type="file" accept="image/*" capture="environment" id="photoFinalIntInput" onchange="uploadPhoto('finalInt',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoFinalIntInput" onchange="uploadPhoto('finalInt',this)" style="display:none"/>
           </label>
         </div>
         <div>
@@ -981,7 +981,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
           <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px solid var(--green);background:var(--green-light);color:var(--green);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span id="photoFinalExtLabel">Foto final externa</span>
-            <input type="file" accept="image/*" capture="environment" id="photoFinalExtInput" onchange="uploadPhoto('finalExt',this)" style="display:none"/>
+            <input type="file" accept="image/*" id="photoFinalExtInput" onchange="uploadPhoto('finalExt',this)" style="display:none"/>
           </label>
         </div>
       </div>
@@ -992,7 +992,7 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
         <label style="width:100%;height:36px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text3);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
           + Adicionar foto extra
-          <input type="file" accept="image/*" capture="environment" id="extraPhotoInput" onchange="addExtraPhoto(this)" style="display:none" multiple/>
+          <input type="file" accept="image/*" id="extraPhotoInput" onchange="addExtraPhoto(this)" style="display:none" multiple/>
         </label>
       </div>
     </div>

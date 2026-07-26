@@ -2757,100 +2757,108 @@ let cachedPdfName = '';
 
 window.preBuildPdf = async function(){
   cachedPdfBlob = null;
-  const content = document.getElementById('pdfContent');
-  if(!content) return;
+  const el = document.getElementById('pdfContent');
+  if(!el) return;
   try{
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-    // Wait for ALL images to load
-    const allImgs = Array.from(content.querySelectorAll('img'));
-    await Promise.all(allImgs.map(img =>
-      img.complete ? Promise.resolve() :
-      new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 10000); })
-    ));
+    // Wait for all images to fully load
+    const imgs = Array.from(el.querySelectorAll('img'));
+    await Promise.all(imgs.map(img => img.complete ? Promise.resolve() :
+      new Promise(r => { img.onload=r; img.onerror=r; setTimeout(r,10000); })));
+
+    // Set all images to natural size (no cropping)
+    imgs.forEach(img => {
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.objectFit = 'contain';
+      img.style.display = 'block';
+    });
+
+    // Render full content at once
+    const canvas = await html2canvas(el, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      imageTimeout: 30000,
+      windowWidth: el.scrollWidth,
+      windowHeight: el.scrollHeight,
+      width: el.scrollWidth,
+      height: el.scrollHeight
+    });
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const margin = 10;
+    const margin = 6;
     const contentW = pageW - margin * 2;
-    let curY = margin;
-    let isFirst = true;
+    const totalH = (canvas.height * contentW) / canvas.width;
 
-    // Helper: add a rendered element to PDF, never cutting it
-    async function addElement(el, scale){
-      if(!el || el.offsetHeight === 0) return;
-      const c = await html2canvas(el, {
-        scale: scale||2, useCORS: true, allowTaint: true,
-        backgroundColor: '#ffffff', logging: false, imageTimeout: 10000
-      });
-      if(!c.width || !c.height) return;
-      const elH = (c.height * contentW) / c.width;
-      const fmt = 'JPEG';
-      const data = c.toDataURL('image/jpeg', 0.97);
-      if(!isFirst && curY + elH > pageH - margin){
-        pdf.addPage(); curY = margin;
-      }
-      isFirst = false;
-      if(elH > pageH - margin * 2){
-        // Taller than page: place and start new page after
-        pdf.addImage(data, fmt, margin, curY, contentW, elH, '', 'FAST');
-        pdf.addPage(); curY = margin;
-      } else {
-        pdf.addImage(data, fmt, margin, curY, contentW, elH, '', 'FAST');
-        curY += elH + 4;
-      }
-    }
+    // Find image positions to avoid cutting through them
+    const imgPositions = imgs.map(img => {
+      const rect = img.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const relTop = rect.top - elRect.top;
+      const relBot = rect.bottom - elRect.top;
+      const scale = contentW / el.scrollWidth;
+      return {
+        top: relTop * scale * (pageW / contentW) * (contentW / el.offsetWidth),
+        bot: relBot * scale * (pageW / contentW) * (contentW / el.offsetWidth)
+      };
+    });
 
-    // Process content: for each top-level child,
-    // if it contains images, render each image individually on its own row
-    for(const child of Array.from(content.children)){
-      if(!child || child.offsetHeight === 0) continue;
-      const imgs = child.querySelectorAll('img');
-      if(imgs.length === 0){
-        // Pure text block — render as one unit
-        await addElement(child, 2);
-      } else if(imgs.length === 1){
-        // Single image — render the whole block
-        await addElement(child, 3);
-      } else {
-        // Multiple images (grid) — render each image's parent cell separately
-        // First render any text/header in this block (without images)
-        const clone = child.cloneNode(true);
-        clone.querySelectorAll('img').forEach(i => i.parentElement.remove());
-        clone.style.position='absolute'; clone.style.left='-9999px';
-        document.body.appendChild(clone);
-        if(clone.offsetHeight > 10) await addElement(clone, 2);
-        document.body.removeChild(clone);
+    // Calculate safe page break positions (not inside any image)
+    let y = 0;
+    let firstPage = true;
+    const sliceH = pageH - margin * 2;
 
-        // Then render each image full-width
-        for(const img of Array.from(imgs)){
-          // Create a wrapper with just this image
-          const wrapper = document.createElement('div');
-          wrapper.style.cssText = 'background:#fff;padding:4px;border-radius:6px;';
-          const imgClone = img.cloneNode(true);
-          imgClone.style.cssText = 'width:100%;height:auto;display:block;border-radius:4px;';
-          wrapper.appendChild(imgClone);
-          document.body.appendChild(wrapper);
-          // Wait for image to load in wrapper
-          await new Promise(r => {
-            if(imgClone.complete) r();
-            else { imgClone.onload=r; imgClone.onerror=r; setTimeout(r,5000); }
-          });
-          await addElement(wrapper, 3);
-          document.body.removeChild(wrapper);
+    while(y < totalH){
+      let breakAt = Math.min(y + sliceH, totalH);
+
+      // Check if breakAt cuts through an image — if so, move break before it
+      const mmPerPx = totalH / canvas.height;
+      for(const pos of imgPositions){
+        const imgTopMm = pos.top * (totalH / el.scrollHeight);
+        const imgBotMm = pos.bot * (totalH / el.scrollHeight);
+        if(imgTopMm < breakAt && imgBotMm > breakAt){
+          breakAt = imgTopMm - 2;
+          break;
         }
       }
+
+      const slicePx = Math.round((breakAt - y) / totalH * canvas.height);
+      if(slicePx <= 0){ y = breakAt + 1; continue; }
+
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = slicePx;
+      const ctx = sliceCanvas.getContext('2d');
+      const srcY = Math.round(y / totalH * canvas.height);
+      ctx.drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
+
+      const sliceH_mm = breakAt - y;
+      if(!firstPage) pdf.addPage();
+      firstPage = false;
+      pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG',
+        margin, margin, contentW, sliceH_mm, '', 'FAST');
+
+      y = breakAt;
     }
 
     cachedPdfBlob = pdf.output('blob');
     const type = currentPdfType==='report'?'Relatorio_instalacao':'Orcamento';
     cachedPdfName = `${type}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
     showToast('PDF pronto ✓');
-  }catch(e){ console.error('preBuildPdf error:', e); showToast('Erro ao gerar PDF'); }
+  }catch(e){
+    console.error('preBuildPdf error:', e);
+    showToast('Erro ao gerar PDF');
+  }
 }
+
 
 window.shareReport = function(){
   if(!cachedPdfBlob){ showToast('PDF ainda a gerar, tenta já...'); return; }

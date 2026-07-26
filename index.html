@@ -2749,8 +2749,6 @@ let currentPdfClient = '';
 let currentPdfRef = '';
 
 window.shareReport = async function(){
-  const content = document.getElementById('pdfContent');
-  if(!content) return;
   const type = currentPdfType==='report'?'Relatório de instalação':'Orçamento';
   const title = `${type} — ${currentPdfClient}`;
   const text = `${type} SunVolt · ${currentPdfClient} · Ref: ${currentPdfRef}`;
@@ -2758,26 +2756,32 @@ window.shareReport = async function(){
   try{
     showToast('A gerar PDF...');
     const pdfBlob = await generatePdfBlob();
-    if(pdfBlob){
-      const fileName = `${type.replace(/\s/g,'_')}_${currentPdfClient.replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
-      const file = new File([pdfBlob], fileName, {type:'application/pdf'});
-      if(navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({files:[file], title, text});
-        return;
-      }
-      // Fallback: download the PDF
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url; a.download = fileName; a.click();
-      URL.revokeObjectURL(url);
-      showToast('PDF descarregado');
+    if(!pdfBlob) throw new Error('PDF vazio');
+
+    const fileName = `${type.replace(/\s/g,'_')}_${(currentPdfClient||'').replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
+    const file = new File([pdfBlob], fileName, {type:'application/pdf'});
+
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title, text});
       return;
     }
+
+    // Fallback: download
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('PDF descarregado!');
+
   }catch(e){
-    if(e.name!=='AbortError') showToast('Erro ao gerar PDF');
+    if(e.name==='AbortError') return;
+    console.error('Erro partilha:', e);
+    showToast('Erro ao gerar PDF');
   }
-  // Final fallback
-  if(navigator.clipboard) navigator.clipboard.writeText(text).then(()=>showToast('Copiado'));
 };
 
 window.shareWhatsApp = async function(){
@@ -2789,6 +2793,7 @@ window.shareWhatsApp = async function(){
       ? `✅ Instalação concluída e testada com sucesso.\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`
       : `Para mais informações sobre este orçamento, contacte-nos.\n\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169 · sunvoltportugal@gmail.com_`);
 
+  // Try Web Share API (works on iOS Safari with files)
   try {
     showToast('A gerar PDF...');
     const pdfBlob = await generatePdfBlob();
@@ -2797,8 +2802,8 @@ window.shareWhatsApp = async function(){
     const fileName = `${type.replace(/\s/g,'_')}_${(currentPdfClient||'').replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
     const file = new File([pdfBlob], fileName, {type:'application/pdf'});
 
-    // Try Web Share API with file
     if(navigator.canShare && navigator.canShare({files:[file]})){
+      // This is the correct iOS way - shows native share sheet including WhatsApp
       await navigator.share({
         files: [file],
         text: msg,
@@ -2807,22 +2812,30 @@ window.shareWhatsApp = async function(){
       return;
     }
 
-    // Fallback: download PDF + open WhatsApp
+    // Desktop fallback: download PDF
     const url = URL.createObjectURL(pdfBlob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('PDF descarregado — abre o WhatsApp para enviar');
-    setTimeout(()=>{ window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); }, 1500);
+    showToast('PDF descarregado!');
 
   } catch(e){
-    if(e && e.name === 'AbortError') return; // user cancelled share
-    console.error('PDF share error:', e);
-    // Final fallback: just open WhatsApp with text
+    if(e && e.name === 'AbortError') return;
+    console.error('Erro PDF:', e);
+    // Last resort: copy message and open WhatsApp
     showToast('A abrir WhatsApp...');
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    const a = document.createElement('a');
+    a.href = waUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 };
 

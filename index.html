@@ -2763,60 +2763,85 @@ window.preBuildPdf = async function(){
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-    // Wait for all images to load fully
-    const imgs = Array.from(content.querySelectorAll('img'));
-    await Promise.all(imgs.map(img =>
+    // Wait for ALL images to load
+    const allImgs = Array.from(content.querySelectorAll('img'));
+    await Promise.all(allImgs.map(img =>
       img.complete ? Promise.resolve() :
-      new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 8000); })
+      new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 10000); })
     ));
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const margin = 8;
+    const margin = 10;
     const contentW = pageW - margin * 2;
-
-    // Render each direct child separately to avoid page-break cuts
-    const children = Array.from(content.children).filter(c => c.offsetHeight > 0);
     let curY = margin;
     let isFirst = true;
 
-    for(const child of children){
-      // Use scale 3 for image-heavy sections, 2 for text
-      const hasImages = child.querySelectorAll('img').length > 0;
-      const scale = hasImages ? 3 : 2;
-
-      const childCanvas = await html2canvas(child, {
-        scale,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        imageTimeout: 15000,
+    // Helper: add a rendered element to PDF, never cutting it
+    async function addElement(el, scale){
+      if(!el || el.offsetHeight === 0) return;
+      const c = await html2canvas(el, {
+        scale: scale||2, useCORS: true, allowTaint: true,
+        backgroundColor: '#ffffff', logging: false, imageTimeout: 10000
       });
-      if(childCanvas.width === 0 || childCanvas.height === 0) continue;
-
-      const childH = (childCanvas.height * contentW) / childCanvas.width;
-      // PNG for image sections (lossless), JPEG for text
-      const fmt = hasImages ? 'PNG' : 'JPEG';
-      const imgData = hasImages
-        ? childCanvas.toDataURL('image/png')
-        : childCanvas.toDataURL('image/jpeg', 0.95);
-
-      if(!isFirst && curY + childH > pageH - margin){
-        pdf.addPage();
-        curY = margin;
+      if(!c.width || !c.height) return;
+      const elH = (c.height * contentW) / c.width;
+      const fmt = 'JPEG';
+      const data = c.toDataURL('image/jpeg', 0.97);
+      if(!isFirst && curY + elH > pageH - margin){
+        pdf.addPage(); curY = margin;
       }
       isFirst = false;
-
-      if(childH > pageH - margin * 2){
-        pdf.addImage(imgData, fmt, margin, curY, contentW, childH, '', 'FAST');
-        pdf.addPage();
-        curY = margin;
+      if(elH > pageH - margin * 2){
+        // Taller than page: place and start new page after
+        pdf.addImage(data, fmt, margin, curY, contentW, elH, '', 'FAST');
+        pdf.addPage(); curY = margin;
       } else {
-        pdf.addImage(imgData, fmt, margin, curY, contentW, childH, '', 'FAST');
-        curY += childH + 3;
+        pdf.addImage(data, fmt, margin, curY, contentW, elH, '', 'FAST');
+        curY += elH + 4;
+      }
+    }
+
+    // Process content: for each top-level child,
+    // if it contains images, render each image individually on its own row
+    for(const child of Array.from(content.children)){
+      if(!child || child.offsetHeight === 0) continue;
+      const imgs = child.querySelectorAll('img');
+      if(imgs.length === 0){
+        // Pure text block — render as one unit
+        await addElement(child, 2);
+      } else if(imgs.length === 1){
+        // Single image — render the whole block
+        await addElement(child, 3);
+      } else {
+        // Multiple images (grid) — render each image's parent cell separately
+        // First render any text/header in this block (without images)
+        const clone = child.cloneNode(true);
+        clone.querySelectorAll('img').forEach(i => i.parentElement.remove());
+        clone.style.position='absolute'; clone.style.left='-9999px';
+        document.body.appendChild(clone);
+        if(clone.offsetHeight > 10) await addElement(clone, 2);
+        document.body.removeChild(clone);
+
+        // Then render each image full-width
+        for(const img of Array.from(imgs)){
+          // Create a wrapper with just this image
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = 'background:#fff;padding:4px;border-radius:6px;';
+          const imgClone = img.cloneNode(true);
+          imgClone.style.cssText = 'width:100%;height:auto;display:block;border-radius:4px;';
+          wrapper.appendChild(imgClone);
+          document.body.appendChild(wrapper);
+          // Wait for image to load in wrapper
+          await new Promise(r => {
+            if(imgClone.complete) r();
+            else { imgClone.onload=r; imgClone.onerror=r; setTimeout(r,5000); }
+          });
+          await addElement(wrapper, 3);
+          document.body.removeChild(wrapper);
+        }
       }
     }
 

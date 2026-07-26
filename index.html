@@ -2807,30 +2807,27 @@ window.preBuildPdf = async function(){
       }catch(e){ console.error('Photo canvas tainted:', e); }
       if(!data){ return; }
 
-      // Natural aspect ratio scaled to fit page
-      let dw = contentW;
-      let dh = dw * ih / iw;
-      if(dh > maxH - 8){ dh = maxH - 8; dw = dh * iw / ih; }
+      // Always start photo on a fresh page so it gets maximum size
+      if(!firstPage){ pdf.addPage(); curY = margin; }
+      firstPage = false;
 
-      // Render label first (if any) and keep it with the photo
+      // Render label first (if any)
       let labelH = 0;
-      let labelData = null, labelW = 0;
       if(labelEl && labelEl.offsetHeight > 2){
         const lc = await html2canvas(labelEl, {scale:2, backgroundColor:'#ffffff', logging:false});
         if(lc && lc.width){
-          labelW = contentW;
           labelH = (lc.height * contentW) / lc.width;
-          labelData = lc.toDataURL('image/jpeg', 0.95);
+          pdf.addImage(lc.toDataURL('image/jpeg', 0.95), 'JPEG', margin, curY, contentW, labelH, '', 'FAST');
+          curY += labelH + 2;
         }
       }
 
-      if(!firstPage && curY + labelH + dh > pageH - margin){ pdf.addPage(); curY = margin; }
-      firstPage = false;
+      // Photo fills all remaining space on this page, keeping natural aspect ratio
+      const availH = pageH - margin - curY;
+      let dw = contentW;
+      let dh = dw * ih / iw;
+      if(dh > availH){ dh = availH; dw = dh * iw / ih; }
 
-      if(labelData){
-        pdf.addImage(labelData, 'JPEG', margin, curY, labelW, labelH, '', 'FAST');
-        curY += labelH + 1;
-      }
       pdf.addImage(data, 'JPEG', margin + (contentW - dw)/2, curY, dw, dh, '', 'FAST');
       curY += dh + 4;
     }

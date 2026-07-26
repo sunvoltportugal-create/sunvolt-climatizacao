@@ -2503,14 +2503,12 @@ function showReportPdf(o, r){
       </div>`:''}
 
       ${r.photos && (r.photos.int||r.photos.ext||r.photos.tube||r.photos.elec)?`
-      <div style="margin-bottom:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">Registo fotográfico — Instalação</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${r.photos.int?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Unidade interna</div><img src="${r.photos.int}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.ext?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Unidade externa</div><img src="${r.photos.ext}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.tube?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Tubagem / Passagem</div><img src="${r.photos.tube}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.elec?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Quadro elétrico</div><img src="${r.photos.elec}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-        </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Instalação</div>
+        ${r.photos.int?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Unidade interna</div><img src="${r.photos.int}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.ext?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Unidade externa</div><img src="${r.photos.ext}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.tube?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Tubagem / Passagem</div><img src="${r.photos.tube}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.elec?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Quadro elétrico</div><img src="${r.photos.elec}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
       </div>`:''}
 
       ${r.photos && (r.photos.serialInt||r.photos.serialExt||r.photos.elecInt||r.photos.elecExt)?`

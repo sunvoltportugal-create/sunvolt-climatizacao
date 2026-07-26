@@ -2523,23 +2523,19 @@ function showReportPdf(o, r){
       </div>`:''}
 
       ${r.photos && (r.photos.p10||r.photos.p20||r.photos.p40||r.photos.vacuum)?`
-      <div style="margin-bottom:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">Registo fotográfico — Testes de pressão e vácuo</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${r.photos.p10?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Manómetro 10 bar</div><img src="${r.photos.p10}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.p20?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Manómetro 20 bar</div><img src="${r.photos.p20}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.p40?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Manómetro 40 bar</div><img src="${r.photos.p40}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.vacuum?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Leitura de vácuo</div><img src="${r.photos.vacuum}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-        </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de pressão e vácuo</div>
+        ${r.photos.p10?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 10 bar</div><img src="${r.photos.p10}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.p20?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 20 bar</div><img src="${r.photos.p20}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.p40?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 40 bar</div><img src="${r.photos.p40}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.vacuum?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">💨 Leitura de vácuo</div><img src="${r.photos.vacuum}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
       </div>`:''}
 
       ${r.photos && (r.photos.cold||r.photos.hot)?`
-      <div style="margin-bottom:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">Registo fotográfico — Testes de temperatura</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${r.photos.cold?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Termómetro modo frio</div><img src="${r.photos.cold}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.hot?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Termómetro modo quente</div><img src="${r.photos.hot}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-        </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de temperatura</div>
+        ${r.photos.cold?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo frio</div><img src="${r.photos.cold}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.hot?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo quente</div><img src="${r.photos.hot}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
       </div>`:''}
 
       <div style="margin-top:16px;padding:12px;background:#e8f5ee;border-radius:8px;font-size:12px;text-align:center;color:#1a7a50;font-weight:600">
@@ -2548,19 +2544,15 @@ function showReportPdf(o, r){
 
       ${r.photos && (r.photos.finalInt||r.photos.finalExt)?`
       <div style="margin-top:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">📸 Fotos finais da instalação concluída</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          ${r.photos.finalInt?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Máquina interna — concluída</div><img src="${r.photos.finalInt}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-          ${r.photos.finalExt?`<div><div style="font-size:10px;color:#888;margin-bottom:4px">Máquina externa — concluída</div><img src="${r.photos.finalExt}" style="width:100%;border-radius:6px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
-        </div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">📸 Fotos finais da instalação concluída</div>
+        ${r.photos.finalInt?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Máquina interna — concluída</div><img src="${r.photos.finalInt}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
+        ${r.photos.finalExt?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Máquina externa — concluída</div><img src="${r.photos.finalExt}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`:''}
       </div>`:''}
 
       ${r.extraPhotos&&r.extraPhotos.length?`
       <div style="margin-top:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">📸 Fotos adicionais</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-          ${r.extraPhotos.map((url,i)=>`<div><img src="${url}" style="width:100%;border-radius:6px;object-fit:cover;aspect-ratio:1"/></div>`).join('')}
-        </div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">📸 Fotos adicionais</div>
+        ${r.extraPhotos.map((url,i)=>`<div style="margin-bottom:14px"><img src="${url}" style="width:100%;border-radius:8px;object-fit:contain;background:#f0f0f0;display:block"/></div>`).join('')}
       </div>`:''}
 
       <div class="pdf-footer" style="margin-top:14px">Bruno Sequeira · SunVolt Climatização · 968 184 169 · sunvoltportugal@gmail.com · ${r.reportDate}</div>
@@ -2763,129 +2755,59 @@ window.preBuildPdf = async function(){
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
+    // Wait for all images to load with CORS
+    const allImgs = Array.from(el.querySelectorAll('img'));
+    await Promise.all(allImgs.map(img => new Promise(resolve => {
+      if(img.complete && img.naturalWidth > 0){ resolve(); return; }
+      img.crossOrigin = 'anonymous';
+      img.onload = resolve;
+      img.onerror = resolve;
+      setTimeout(resolve, 10000);
+      // Force reload with crossOrigin
+      const src = img.src;
+      img.src = '';
+      img.src = src;
+    })));
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const contentW = pageW - margin * 2;
+
+    // Render each top-level child separately
+    // Each image is now its own div so this handles page breaks correctly
+    let curY = margin;
     let firstPage = true;
 
-    async function renderEl(element, scale){
-      if(!element || element.offsetHeight === 0) return null;
-      const c = await html2canvas(element, {
-        scale: scale||2,
+    for(const child of Array.from(el.children)){
+      if(!child || child.offsetHeight < 2) continue;
+
+      const c = await html2canvas(child, {
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000
       });
-      return c.width > 0 && c.height > 0 ? c : null;
-    }
+      if(!c || c.width === 0) continue;
 
-    async function addToPage(canvas, forceNewPage){
-      if(!canvas) return;
-      const elH = (canvas.height * contentW) / canvas.width;
-      const data = canvas.toDataURL('image/jpeg', 0.97);
-      if(forceNewPage || (!firstPage && elH > pageH * 0.4)){
-        if(!firstPage) pdf.addPage();
-        firstPage = false;
-        pdf.addImage(data, 'JPEG', margin, margin, contentW, Math.min(elH, pageH - margin*2), '', 'FAST');
-      } else {
-        if(!firstPage) pdf.addPage();
-        firstPage = false;
-        pdf.addImage(data, 'JPEG', margin, margin, contentW, Math.min(elH, pageH - margin*2), '', 'FAST');
+      const elH = (c.height * contentW) / c.width;
+      const data = c.toDataURL('image/jpeg', 0.95);
+
+      // If block doesn't fit, start new page
+      if(!firstPage && curY + elH > pageH - margin){
+        pdf.addPage();
+        curY = margin;
       }
-    }
+      firstPage = false;
 
-    // Replace all images with pre-fetched versions using crossOrigin
-    const allImgs = Array.from(el.querySelectorAll('img'));
-    await Promise.all(allImgs.map(img => new Promise(resolve => {
-      const newImg = new Image();
-      newImg.crossOrigin = 'anonymous';
-      newImg.onload = () => {
-        img.src = newImg.src;
-        img.crossOrigin = 'anonymous';
-        resolve();
-      };
-      newImg.onerror = () => resolve(); // continue even if fails
-      // Add crossorigin param to Cloudinary URL
-      const src = img.src || img.dataset.src || '';
-      newImg.src = src.includes('cloudinary') ? src + (src.includes('?')?'&':'?') + 'cb=' + Date.now() : src;
-      setTimeout(resolve, 8000);
-    })));
-
-    // Now render section by section
-    // 1. Text/header sections (no images)
-    const children = Array.from(el.children);
-
-    for(const child of children){
-      const imgs = Array.from(child.querySelectorAll('img'));
-
-      if(imgs.length === 0){
-        // Pure text — add to current page accumulating
-        const c = await renderEl(child, 2);
-        if(!c) continue;
-        const elH = (c.height * contentW) / c.width;
-        if(!firstPage && elH < 40){
-          // Small text block — skip new page
-        } else {
-          if(!firstPage) pdf.addPage();
-          firstPage = false;
-        }
-        pdf.addImage(c.toDataURL('image/jpeg',0.95), 'JPEG', margin, margin, contentW, Math.min(elH, pageH-margin*2), '', 'FAST');
-
-      } else {
-        // Has images — render each image on its OWN full page
-        // First render any text in this section
-        const textClone = child.cloneNode(true);
-        Array.from(textClone.querySelectorAll('img')).forEach(i => {
-          const parent = i.closest('div');
-          if(parent) parent.style.display = 'none';
-        });
-        textClone.style.cssText = 'position:fixed;top:0;left:0;width:'+el.offsetWidth+'px;opacity:0;pointer-events:none;z-index:-1;background:#fff';
-        document.body.appendChild(textClone);
-        const tc = await renderEl(textClone, 2);
-        document.body.removeChild(textClone);
-        if(tc && tc.height > 20){
-          if(!firstPage) pdf.addPage(); firstPage=false;
-          const th = (tc.height * contentW) / tc.width;
-          pdf.addImage(tc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,contentW,Math.min(th,pageH-margin*2),'','FAST');
-        }
-
-        // Each image gets its own full page
-        for(const img of imgs){
-          if(!img.src || img.src.includes('undefined')) continue;
-          await new Promise(r => {
-            if(img.complete && img.naturalWidth > 0) return r();
-            img.onload = r; img.onerror = r; setTimeout(r, 5000);
-          });
-          if(img.naturalWidth === 0) continue;
-
-          const wrapper = document.createElement('div');
-          wrapper.style.cssText = 'position:fixed;top:0;left:0;width:'+el.offsetWidth+'px;background:#fff;padding:8px;z-index:-1;opacity:0;pointer-events:none';
-          const imgClone = new Image();
-          imgClone.crossOrigin = 'anonymous';
-          imgClone.src = img.src;
-          imgClone.style.cssText = 'width:100%;height:auto;display:block;max-height:90vh;object-fit:contain';
-          wrapper.appendChild(imgClone);
-          document.body.appendChild(wrapper);
-          await new Promise(r => {
-            if(imgClone.complete && imgClone.naturalWidth > 0) return r();
-            imgClone.onload = r; imgClone.onerror = r; setTimeout(r, 8000);
-          });
-          if(imgClone.naturalWidth === 0){ document.body.removeChild(wrapper); continue; }
-
-          const ic = await renderEl(wrapper, 3);
-          document.body.removeChild(wrapper);
-          if(!ic) continue;
-
-          if(!firstPage) pdf.addPage(); firstPage = false;
-          const ih = (ic.height * contentW) / ic.width;
-          pdf.addImage(ic.toDataURL('image/jpeg',0.97),'JPEG',margin,margin,contentW,Math.min(ih,pageH-margin*2),'','FAST');
-        }
-      }
+      // If block is taller than a full page, scale it to fit
+      const fitH = Math.min(elH, pageH - margin * 2);
+      pdf.addImage(data, 'JPEG', margin, curY, contentW, fitH, '', 'FAST');
+      curY += fitH + 4;
     }
 
     cachedPdfBlob = pdf.output('blob');

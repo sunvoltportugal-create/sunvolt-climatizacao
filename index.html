@@ -2789,13 +2789,16 @@ window.shareWhatsApp = async function(){
       ? `✅ Instalação concluída e testada com sucesso.\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`
       : `Para mais informações sobre este orçamento, contacte-nos.\n\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169 · sunvoltportugal@gmail.com_`);
 
-  // Try to generate PDF blob and share with file
   try {
     showToast('A gerar PDF...');
     const pdfBlob = await generatePdfBlob();
-    if(pdfBlob && navigator.canShare && navigator.canShare({files:[new File([pdfBlob],'doc.pdf',{type:'application/pdf'})]})){
-      const fileName = `${type.replace(/\s/g,'_')}_${currentPdfClient.replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
-      const file = new File([pdfBlob], fileName, {type:'application/pdf'});
+    if(!pdfBlob) throw new Error('PDF vazio');
+
+    const fileName = `${type.replace(/\s/g,'_')}_${(currentPdfClient||'').replace(/\s/g,'_')}_${currentPdfRef}.pdf`;
+    const file = new File([pdfBlob], fileName, {type:'application/pdf'});
+
+    // Try Web Share API with file
+    if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({
         files: [file],
         text: msg,
@@ -2803,81 +2806,109 @@ window.shareWhatsApp = async function(){
       });
       return;
     }
+
+    // Fallback: download PDF + open WhatsApp
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('PDF descarregado — abre o WhatsApp para enviar');
+    setTimeout(()=>{ window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank'); }, 1500);
+
   } catch(e){
-    // Fallback to WhatsApp link if share fails or not supported
+    if(e && e.name === 'AbortError') return; // user cancelled share
+    console.error('PDF share error:', e);
+    // Final fallback: just open WhatsApp with text
+    showToast('A abrir WhatsApp...');
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   }
-  // Fallback: open WhatsApp with text only
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
 };
 
 async function generatePdfBlob(){
   const content = document.getElementById('pdfContent');
   if(!content) return null;
 
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  try{
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }catch(e){ console.error('Script load error:', e); return null; }
 
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF('p', 'mm', 'a4');
-  const pageW = pdf.internal.pageSize.getWidth();   // 210mm
-  const pageH = pdf.internal.pageSize.getHeight();  // 297mm
-  const margin = 10; // mm
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 8;
   const contentW = pageW - margin * 2;
 
-  // --- Split content into sections to avoid page-break cuts ---
-  // Render each top-level child of pdfContent separately
-  const children = Array.from(content.children);
-  let curY = margin; // current Y position in mm on current page
-  let firstPage = true;
+  try{
+    // Section-by-section render to avoid page-break cuts
+    const children = Array.from(content.children).filter(c => c.offsetHeight > 0);
+    let curY = margin;
+    let firstPage = true;
 
-  for(let i = 0; i < children.length; i++){
-    const child = children[i];
-    // Skip if invisible
-    if(child.offsetHeight === 0) continue;
+    for(const child of children){
+      const childCanvas = await html2canvas(child, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+      });
+      if(childCanvas.width === 0 || childCanvas.height === 0) continue;
 
-    const childCanvas = await html2canvas(child, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null,
-      logging: false,
-      imageTimeout: 30000,
-    });
+      const childH = (childCanvas.height * contentW) / childCanvas.width;
+      const imgData = childCanvas.toDataURL('image/jpeg', 0.95);
 
-    if(childCanvas.width === 0 || childCanvas.height === 0) continue;
-
-    const childW = contentW;
-    const childH = (childCanvas.height * childW) / childCanvas.width;
-    const imgData = childCanvas.toDataURL('image/png');
-
-    // If this block doesn't fit on current page, add new page
-    if(!firstPage && curY + childH > pageH - margin){
-      pdf.addPage();
-      curY = margin;
-    }
-    firstPage = false;
-
-    // If the block itself is taller than a full page, split it
-    if(childH > pageH - margin * 2){
-      let srcY = 0;
-      while(srcY < childH){
-        const remaining = pageH - curY - margin;
-        const sliceH = Math.min(remaining, childH - srcY);
-        pdf.addImage(imgData, 'PNG', margin, curY, childW, childH, '', 'FAST', 0);
-        srcY += sliceH;
-        if(srcY < childH){
-          pdf.addPage();
-          curY = margin;
-        }
+      if(!firstPage && curY + childH > pageH - margin){
+        pdf.addPage();
+        curY = margin;
       }
-      curY += Math.min(childH, pageH - curY - margin);
-    } else {
-      pdf.addImage(imgData, 'PNG', margin, curY, childW, childH, '', 'FAST');
-      curY += childH + 4; // 4mm gap between sections
+      firstPage = false;
+
+      if(childH > pageH - margin * 2){
+        // Very tall block — just place it and let it overflow (better than cutting)
+        pdf.addImage(imgData, 'JPEG', margin, curY, contentW, childH, '', 'FAST');
+        pdf.addPage();
+        curY = margin;
+      } else {
+        pdf.addImage(imgData, 'JPEG', margin, curY, contentW, childH, '', 'FAST');
+        curY += childH + 3;
+      }
+    }
+    return pdf.output('blob');
+
+  }catch(e){
+    console.error('Section render failed, falling back:', e);
+    // Fallback: render whole content as one image
+    try{
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 30000,
+      });
+      const pdf2 = new jsPDF('p', 'mm', 'a4');
+      const imgW = pdf2.internal.pageSize.getWidth();
+      const imgH = (canvas.height * imgW) / canvas.width;
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      let y = 0;
+      const ph = pdf2.internal.pageSize.getHeight();
+      while(y < imgH){
+        if(y > 0) pdf2.addPage();
+        pdf2.addImage(imgData, 'JPEG', 0, -y, imgW, imgH, '', 'FAST');
+        y += ph;
+      }
+      return pdf2.output('blob');
+    }catch(e2){
+      console.error('Fallback render also failed:', e2);
+      return null;
     }
   }
-
-  return pdf.output('blob');
 }
 
 function loadScript(src){

@@ -2763,90 +2763,129 @@ window.preBuildPdf = async function(){
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-    // Wait for all images to fully load
-    const imgs = Array.from(el.querySelectorAll('img'));
-    await Promise.all(imgs.map(img => img.complete ? Promise.resolve() :
-      new Promise(r => { img.onload=r; img.onerror=r; setTimeout(r,10000); })));
-
-    // Set all images to natural size (no cropping)
-    imgs.forEach(img => {
-      img.style.maxWidth = '100%';
-      img.style.height = 'auto';
-      img.style.objectFit = 'contain';
-      img.style.display = 'block';
-    });
-
-    // Render full content at once
-    const canvas = await html2canvas(el, {
-      scale: 3,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      imageTimeout: 30000,
-      windowWidth: el.scrollWidth,
-      windowHeight: el.scrollHeight,
-      width: el.scrollWidth,
-      height: el.scrollHeight
-    });
-
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const margin = 6;
+    const margin = 10;
     const contentW = pageW - margin * 2;
-    const totalH = (canvas.height * contentW) / canvas.width;
-
-    // Find image positions to avoid cutting through them
-    const imgPositions = imgs.map(img => {
-      const rect = img.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      const relTop = rect.top - elRect.top;
-      const relBot = rect.bottom - elRect.top;
-      const scale = contentW / el.scrollWidth;
-      return {
-        top: relTop * scale * (pageW / contentW) * (contentW / el.offsetWidth),
-        bot: relBot * scale * (pageW / contentW) * (contentW / el.offsetWidth)
-      };
-    });
-
-    // Calculate safe page break positions (not inside any image)
-    let y = 0;
     let firstPage = true;
-    const sliceH = pageH - margin * 2;
 
-    while(y < totalH){
-      let breakAt = Math.min(y + sliceH, totalH);
+    async function renderEl(element, scale){
+      if(!element || element.offsetHeight === 0) return null;
+      const c = await html2canvas(element, {
+        scale: scale||2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000
+      });
+      return c.width > 0 && c.height > 0 ? c : null;
+    }
 
-      // Check if breakAt cuts through an image — if so, move break before it
-      const mmPerPx = totalH / canvas.height;
-      for(const pos of imgPositions){
-        const imgTopMm = pos.top * (totalH / el.scrollHeight);
-        const imgBotMm = pos.bot * (totalH / el.scrollHeight);
-        if(imgTopMm < breakAt && imgBotMm > breakAt){
-          breakAt = imgTopMm - 2;
-          break;
+    async function addToPage(canvas, forceNewPage){
+      if(!canvas) return;
+      const elH = (canvas.height * contentW) / canvas.width;
+      const data = canvas.toDataURL('image/jpeg', 0.97);
+      if(forceNewPage || (!firstPage && elH > pageH * 0.4)){
+        if(!firstPage) pdf.addPage();
+        firstPage = false;
+        pdf.addImage(data, 'JPEG', margin, margin, contentW, Math.min(elH, pageH - margin*2), '', 'FAST');
+      } else {
+        if(!firstPage) pdf.addPage();
+        firstPage = false;
+        pdf.addImage(data, 'JPEG', margin, margin, contentW, Math.min(elH, pageH - margin*2), '', 'FAST');
+      }
+    }
+
+    // Replace all images with pre-fetched versions using crossOrigin
+    const allImgs = Array.from(el.querySelectorAll('img'));
+    await Promise.all(allImgs.map(img => new Promise(resolve => {
+      const newImg = new Image();
+      newImg.crossOrigin = 'anonymous';
+      newImg.onload = () => {
+        img.src = newImg.src;
+        img.crossOrigin = 'anonymous';
+        resolve();
+      };
+      newImg.onerror = () => resolve(); // continue even if fails
+      // Add crossorigin param to Cloudinary URL
+      const src = img.src || img.dataset.src || '';
+      newImg.src = src.includes('cloudinary') ? src + (src.includes('?')?'&':'?') + 'cb=' + Date.now() : src;
+      setTimeout(resolve, 8000);
+    })));
+
+    // Now render section by section
+    // 1. Text/header sections (no images)
+    const children = Array.from(el.children);
+
+    for(const child of children){
+      const imgs = Array.from(child.querySelectorAll('img'));
+
+      if(imgs.length === 0){
+        // Pure text — add to current page accumulating
+        const c = await renderEl(child, 2);
+        if(!c) continue;
+        const elH = (c.height * contentW) / c.width;
+        if(!firstPage && elH < 40){
+          // Small text block — skip new page
+        } else {
+          if(!firstPage) pdf.addPage();
+          firstPage = false;
+        }
+        pdf.addImage(c.toDataURL('image/jpeg',0.95), 'JPEG', margin, margin, contentW, Math.min(elH, pageH-margin*2), '', 'FAST');
+
+      } else {
+        // Has images — render each image on its OWN full page
+        // First render any text in this section
+        const textClone = child.cloneNode(true);
+        Array.from(textClone.querySelectorAll('img')).forEach(i => {
+          const parent = i.closest('div');
+          if(parent) parent.style.display = 'none';
+        });
+        textClone.style.cssText = 'position:fixed;top:0;left:0;width:'+el.offsetWidth+'px;opacity:0;pointer-events:none;z-index:-1;background:#fff';
+        document.body.appendChild(textClone);
+        const tc = await renderEl(textClone, 2);
+        document.body.removeChild(textClone);
+        if(tc && tc.height > 20){
+          if(!firstPage) pdf.addPage(); firstPage=false;
+          const th = (tc.height * contentW) / tc.width;
+          pdf.addImage(tc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,contentW,Math.min(th,pageH-margin*2),'','FAST');
+        }
+
+        // Each image gets its own full page
+        for(const img of imgs){
+          if(!img.src || img.src.includes('undefined')) continue;
+          await new Promise(r => {
+            if(img.complete && img.naturalWidth > 0) return r();
+            img.onload = r; img.onerror = r; setTimeout(r, 5000);
+          });
+          if(img.naturalWidth === 0) continue;
+
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = 'position:fixed;top:0;left:0;width:'+el.offsetWidth+'px;background:#fff;padding:8px;z-index:-1;opacity:0;pointer-events:none';
+          const imgClone = new Image();
+          imgClone.crossOrigin = 'anonymous';
+          imgClone.src = img.src;
+          imgClone.style.cssText = 'width:100%;height:auto;display:block;max-height:90vh;object-fit:contain';
+          wrapper.appendChild(imgClone);
+          document.body.appendChild(wrapper);
+          await new Promise(r => {
+            if(imgClone.complete && imgClone.naturalWidth > 0) return r();
+            imgClone.onload = r; imgClone.onerror = r; setTimeout(r, 8000);
+          });
+          if(imgClone.naturalWidth === 0){ document.body.removeChild(wrapper); continue; }
+
+          const ic = await renderEl(wrapper, 3);
+          document.body.removeChild(wrapper);
+          if(!ic) continue;
+
+          if(!firstPage) pdf.addPage(); firstPage = false;
+          const ih = (ic.height * contentW) / ic.width;
+          pdf.addImage(ic.toDataURL('image/jpeg',0.97),'JPEG',margin,margin,contentW,Math.min(ih,pageH-margin*2),'','FAST');
         }
       }
-
-      const slicePx = Math.round((breakAt - y) / totalH * canvas.height);
-      if(slicePx <= 0){ y = breakAt + 1; continue; }
-
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = slicePx;
-      const ctx = sliceCanvas.getContext('2d');
-      const srcY = Math.round(y / totalH * canvas.height);
-      ctx.drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
-
-      const sliceH_mm = breakAt - y;
-      if(!firstPage) pdf.addPage();
-      firstPage = false;
-      pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG',
-        margin, margin, contentW, sliceH_mm, '', 'FAST');
-
-      y = breakAt;
     }
 
     cachedPdfBlob = pdf.output('blob');

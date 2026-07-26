@@ -2505,35 +2505,35 @@ function showReportPdf(o, r){
       ${r.photos && (r.photos.int||r.photos.ext||r.photos.tube||r.photos.elec)?`
       <div style="margin-bottom:8px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Instalação</div>
-        ${r.photos.int?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Unidade interna</div><img src="${r.photos.int}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.ext?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Unidade externa</div><img src="${r.photos.ext}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.tube?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Tubagem / Passagem</div><img src="${r.photos.tube}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.elec?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Quadro elétrico</div><img src="${r.photos.elec}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
+        ${r.photos.int?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Unidade interna</div><img src="${r.photos.int}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.ext?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Unidade externa</div><img src="${r.photos.ext}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.tube?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Tubagem / Passagem</div><img src="${r.photos.tube}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.elec?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Quadro elétrico</div><img src="${r.photos.elec}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
       </div>`:''}
 
       ${r.photos && (r.photos.serialInt||r.photos.serialExt||r.photos.elecInt||r.photos.elecExt)?`
       <div style="margin-bottom:14px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">Números de série & Ligações elétricas</div>
-        ${r.photos.serialInt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Nº série — Unidade interna</div><img src="${r.photos.serialInt}" style="width:100%;border-radius:6px;display:block"/></div>`:''}
-        ${r.photos.serialExt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Nº série — Unidade externa</div><img src="${r.photos.serialExt}" style="width:100%;border-radius:6px;display:block"/></div>`:''}
-        ${r.photos.elecInt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Ligações elétricas — Interna</div><img src="${r.photos.elecInt}" style="width:100%;border-radius:6px;display:block"/></div>`:''}
-        ${r.photos.elecExt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Ligações elétricas — Externa</div><img src="${r.photos.elecExt}" style="width:100%;border-radius:6px;display:block"/></div>`:''}
+        ${r.photos.serialInt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Nº série — Unidade interna</div><img src="${r.photos.serialInt}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.serialExt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Nº série — Unidade externa</div><img src="${r.photos.serialExt}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.elecInt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Ligações elétricas — Interna</div><img src="${r.photos.elecInt}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.elecExt?`<div style="margin-bottom:10px"><div style="font-size:10px;color:#888;margin-bottom:4px">Ligações elétricas — Externa</div><img src="${r.photos.elecExt}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
       </div>`:''}
 
       ${r.photos && (r.photos.p10||r.photos.p20||r.photos.p40||r.photos.vacuum)?`
       <div style="margin-bottom:8px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de pressão e vácuo</div>
-        ${r.photos.p10?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 10 bar</div><img src="${r.photos.p10}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.p20?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 20 bar</div><img src="${r.photos.p20}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.p40?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 40 bar</div><img src="${r.photos.p40}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.vacuum?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">💨 Leitura de vácuo</div><img src="${r.photos.vacuum}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
+        ${r.photos.p10?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 10 bar</div><img src="${r.photos.p10}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.p20?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 20 bar</div><img src="${r.photos.p20}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.p40?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">📊 Manómetro 40 bar</div><img src="${r.photos.p40}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.vacuum?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">💨 Leitura de vácuo</div><img src="${r.photos.vacuum}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
       </div>`:''}
 
       ${r.photos && (r.photos.cold||r.photos.hot)?`
       <div style="margin-bottom:8px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de temperatura</div>
-        ${r.photos.cold?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo frio</div><img src="${r.photos.cold}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.hot?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo quente</div><img src="${r.photos.hot}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
+        ${r.photos.cold?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo frio</div><img src="${r.photos.cold}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.hot?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo quente</div><img src="${r.photos.hot}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
       </div>`:''}
 
       <div style="margin-top:16px;padding:12px;background:#e8f5ee;border-radius:8px;font-size:12px;text-align:center;color:#1a7a50;font-weight:600">
@@ -2543,14 +2543,14 @@ function showReportPdf(o, r){
       ${r.photos && (r.photos.finalInt||r.photos.finalExt)?`
       <div style="margin-top:14px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">📸 Fotos finais da instalação concluída</div>
-        ${r.photos.finalInt?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Máquina interna — concluída</div><img src="${r.photos.finalInt}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
-        ${r.photos.finalExt?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Máquina externa — concluída</div><img src="${r.photos.finalExt}" style="width:100%;border-radius:8px;display:block"/></div>`:''}
+        ${r.photos.finalInt?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Máquina interna — concluída</div><img src="${r.photos.finalInt}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.finalExt?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">Máquina externa — concluída</div><img src="${r.photos.finalExt}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
       </div>`:''}
 
       ${r.extraPhotos&&r.extraPhotos.length?`
       <div style="margin-top:14px">
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">📸 Fotos adicionais</div>
-        ${r.extraPhotos.map((url,i)=>`<div style="margin-bottom:14px"><img src="${url}" style="width:100%;border-radius:8px;display:block"/></div>`).join('')}
+        ${r.extraPhotos.map((url,i)=>`<div style="margin-bottom:14px"><img src="${url}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`).join('')}
       </div>`:''}
 
       <div class="pdf-footer" style="margin-top:14px">Bruno Sequeira · SunVolt Climatização · 968 184 169 · sunvoltportugal@gmail.com · ${r.reportDate}</div>

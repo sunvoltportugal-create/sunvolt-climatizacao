@@ -2762,24 +2762,69 @@ window.preBuildPdf = async function(){
   try{
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    const canvas = await html2canvas(content, {
-      scale: 2, useCORS: true, allowTaint: true,
-      backgroundColor: '#ffffff', logging: false, imageTimeout: 30000
-    });
+
+    // Wait for all images to load fully
+    const imgs = Array.from(content.querySelectorAll('img'));
+    await Promise.all(imgs.map(img =>
+      img.complete ? Promise.resolve() :
+      new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 8000); })
+    ));
+
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p','mm','a4');
+    const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = (canvas.height * imgW) / canvas.width;
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-    let y = 0;
-    while(y < imgH){ if(y>0) pdf.addPage(); pdf.addImage(imgData,'JPEG',0,-y,imgW,imgH,'','FAST'); y+=pageH; }
+    const margin = 8;
+    const contentW = pageW - margin * 2;
+
+    // Render each direct child separately to avoid page-break cuts
+    const children = Array.from(content.children).filter(c => c.offsetHeight > 0);
+    let curY = margin;
+    let isFirst = true;
+
+    for(const child of children){
+      // Use scale 3 for image-heavy sections, 2 for text
+      const hasImages = child.querySelectorAll('img').length > 0;
+      const scale = hasImages ? 3 : 2;
+
+      const childCanvas = await html2canvas(child, {
+        scale,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+      });
+      if(childCanvas.width === 0 || childCanvas.height === 0) continue;
+
+      const childH = (childCanvas.height * contentW) / childCanvas.width;
+      // PNG for image sections (lossless), JPEG for text
+      const fmt = hasImages ? 'PNG' : 'JPEG';
+      const imgData = hasImages
+        ? childCanvas.toDataURL('image/png')
+        : childCanvas.toDataURL('image/jpeg', 0.95);
+
+      if(!isFirst && curY + childH > pageH - margin){
+        pdf.addPage();
+        curY = margin;
+      }
+      isFirst = false;
+
+      if(childH > pageH - margin * 2){
+        pdf.addImage(imgData, fmt, margin, curY, contentW, childH, '', 'FAST');
+        pdf.addPage();
+        curY = margin;
+      } else {
+        pdf.addImage(imgData, fmt, margin, curY, contentW, childH, '', 'FAST');
+        curY += childH + 3;
+      }
+    }
+
     cachedPdfBlob = pdf.output('blob');
     const type = currentPdfType==='report'?'Relatorio_instalacao':'Orcamento';
     cachedPdfName = `${type}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
     showToast('PDF pronto ✓');
-  }catch(e){ console.error('preBuildPdf error:', e); }
+  }catch(e){ console.error('preBuildPdf error:', e); showToast('Erro ao gerar PDF'); }
 }
 
 window.shareReport = function(){

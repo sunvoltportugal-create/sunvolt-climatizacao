@@ -2568,6 +2568,8 @@ function showReportPdf(o, r){
 
   document.getElementById('pdfPreviewArea').innerHTML = content;
   openModal('pdfModal');
+  // Pre-build PDF in background so share buttons work instantly
+  setTimeout(()=>preBuildPdf(), 500);
 }
 
 // ---- PDF ----
@@ -2732,6 +2734,7 @@ window.showPdf=function(id, mode='client'){
   document.getElementById('shareButtons').style.display='flex';
   document.getElementById('pdfPreviewArea').innerHTML=content;
   openModal('pdfModal');
+  setTimeout(()=>preBuildPdf(), 500);
 };
 
 window.printPdf=function(){
@@ -2748,85 +2751,70 @@ let currentPdfType = 'orc'; // 'orc' or 'report'
 let currentPdfClient = '';
 let currentPdfRef = '';
 
-window.shareReport = async function(){
-  await doShare('share');
-};
+// Pre-generated PDF blob
+let cachedPdfBlob = null;
+let cachedPdfName = '';
 
-window.shareWhatsApp = async function(){
-  await doShare('whatsapp');
-};
-
-async function doShare(mode){
-  const type = currentPdfType==='report' ? 'Relatório de instalação' : 'Orçamento';
-  const msg = `*${type} SunVolt*\nCliente: *${currentPdfClient}*\nRef: ${currentPdfRef}\n\n` +
-    (currentPdfType==='report'
-      ? `✅ Instalação concluída e testada com sucesso.\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`
-      : `_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`);
-
+window.preBuildPdf = async function(){
+  cachedPdfBlob = null;
   const content = document.getElementById('pdfContent');
-  if(!content){ showToast('Sem conteúdo para gerar PDF'); return; }
-
-  showToast('A gerar PDF...');
-
+  if(!content) return;
   try{
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-
     const canvas = await html2canvas(content, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      imageTimeout: 30000
+      scale: 2, useCORS: true, allowTaint: true,
+      backgroundColor: '#ffffff', logging: false, imageTimeout: 30000
     });
-
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('p','mm','a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
     const imgW = pageW;
     const imgH = (canvas.height * imgW) / canvas.width;
     const imgData = canvas.toDataURL('image/jpeg', 0.92);
-
     let y = 0;
-    while(y < imgH){
-      if(y > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, -y, imgW, imgH, '', 'FAST');
-      y += pageH;
-    }
-
-    const pdfBlob = pdf.output('blob');
-    const fileName = `${type.replace(/\s/g,'_')}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
-    const file = new File([pdfBlob], fileName, {type:'application/pdf'});
-
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({
-        files:[file],
-        text: msg,
-        title: `${type} — ${currentPdfClient}`
-      });
-    } else {
-      // Desktop: download
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url; a.download = fileName;
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('PDF descarregado!');
-    }
-
-  }catch(e){
-    if(e && e.name==='AbortError') return;
-    console.error('PDF error:', e);
-    // Fallback: open WhatsApp with text
-    const a = document.createElement('a');
-    a.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    a.target = '_blank'; a.rel = 'noopener noreferrer';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  }
+    while(y < imgH){ if(y>0) pdf.addPage(); pdf.addImage(imgData,'JPEG',0,-y,imgW,imgH,'','FAST'); y+=pageH; }
+    cachedPdfBlob = pdf.output('blob');
+    const type = currentPdfType==='report'?'Relatorio_instalacao':'Orcamento';
+    cachedPdfName = `${type}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
+    showToast('PDF pronto ✓');
+  }catch(e){ console.error('preBuildPdf error:', e); }
 }
+
+window.shareReport = function(){
+  if(!cachedPdfBlob){ showToast('PDF ainda a gerar, tenta já...'); return; }
+  const type = currentPdfType==='report'?'Relatório de instalação':'Orçamento';
+  const file = new File([cachedPdfBlob], cachedPdfName, {type:'application/pdf'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file], title:`${type} — ${currentPdfClient}`, text:`${type} SunVolt · ${currentPdfClient}`})
+      .catch(e=>{ if(e.name!=='AbortError') console.error(e); });
+  } else {
+    const url = URL.createObjectURL(cachedPdfBlob);
+    const a = document.createElement('a'); a.href=url; a.download=cachedPdfName;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('PDF descarregado!');
+  }
+};
+
+window.shareWhatsApp = function(){
+  if(!cachedPdfBlob){ showToast('PDF ainda a gerar, tenta já...'); return; }
+  const type = currentPdfType==='report'?'Relatório de instalação':'Orçamento';
+  const msg = `*${type} SunVolt*\nCliente: *${currentPdfClient}*\nRef: ${currentPdfRef}\n\n` +
+    (currentPdfType==='report'
+      ? `✅ Instalação concluída e testada com sucesso.\n_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`
+      : `_Bruno Sequeira · SunVolt Climatização_\n_📞 968 184 169_`);
+  const file = new File([cachedPdfBlob], cachedPdfName, {type:'application/pdf'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file], text:msg, title:`${type} — ${currentPdfClient}`})
+      .catch(e=>{ if(e.name!=='AbortError') console.error(e); });
+  } else {
+    const url = URL.createObjectURL(cachedPdfBlob);
+    const a = document.createElement('a'); a.href=url; a.download=cachedPdfName;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('PDF descarregado!');
+  }
+};
 
 function loadScript(src){
   return new Promise((resolve, reject)=>{

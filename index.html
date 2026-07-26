@@ -2802,10 +2802,18 @@ window.preBuildPdf = async function(){
       }
       firstPage = false;
 
-      // If block is taller than a full page, scale it to fit
-      const fitH = Math.min(elH, pageH - margin * 2);
-      pdf.addImage(data, 'JPEG', margin, curY, contentW, fitH, '', 'FAST');
-      curY += fitH + 4;
+      // Never distort: if block taller than page, scale BOTH dimensions proportionally
+      const maxH = pageH - margin * 2;
+      let drawW = contentW;
+      let drawH = elH;
+      if(elH > maxH){
+        const ratio = maxH / elH;
+        drawH = maxH;
+        drawW = contentW * ratio;
+      }
+      const drawX = margin + (contentW - drawW) / 2; // center horizontally
+      pdf.addImage(data, 'JPEG', drawX, curY, drawW, drawH, '', 'FAST');
+      curY += drawH + 4;
     }
 
     cachedPdfBlob = pdf.output('blob');

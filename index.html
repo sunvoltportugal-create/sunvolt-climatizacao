@@ -2479,24 +2479,6 @@ function showReportPdf(o, r){
         </div>
       </div>`:''}
 
-      <table class="pdf-table">
-        <thead><tr><th>Teste de temperatura</th><th>Insuflação</th><th>Retorno</th><th>Δ Temp</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>Modo frio (T. ambiente: ${r.ambient||'—'}°C)</td>
-            <td>${r.coldIn?r.coldIn+'°C':'—'}</td>
-            <td>${r.coldOut?r.coldOut+'°C':'—'}</td>
-            <td style="font-weight:700">${r.coldIn&&r.coldOut?Math.abs(r.coldOut-r.coldIn).toFixed(1)+'°C':'—'}</td>
-          </tr>
-          <tr>
-            <td>Modo quente</td>
-            <td>${r.hotIn?r.hotIn+'°C':'—'}</td>
-            <td>${r.hotOut?r.hotOut+'°C':'—'}</td>
-            <td style="font-weight:700">${r.hotIn&&r.hotOut?Math.abs(r.hotIn-r.hotOut).toFixed(1)+'°C':'—'}</td>
-          </tr>
-        </tbody>
-      </table>
-
       ${r.observations?`<div style="margin-bottom:14px;padding:10px;background:#f5f7fa;border-radius:8px;font-size:12px">
         <div style="font-weight:600;margin-bottom:4px">Observações</div>
         <div style="color:#444">${esc(r.observations)}</div>
@@ -2531,6 +2513,23 @@ function showReportPdf(o, r){
 
       ${r.photos && (r.photos.cold||r.photos.hot)?`
       <div style="margin-bottom:8px">
+        <table class="pdf-table" style="margin-bottom:10px">
+          <thead><tr><th>Teste de temperatura</th><th>Insuflação</th><th>Retorno</th><th>Δ Temp</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Modo frio (T. ambiente: ${r.ambient||'—'}°C)</td>
+              <td>${r.coldIn?r.coldIn+'°C':'—'}</td>
+              <td>${r.coldOut?r.coldOut+'°C':'—'}</td>
+              <td style="font-weight:700">${r.coldIn&&r.coldOut?Math.abs(r.coldOut-r.coldIn).toFixed(1)+'°C':'—'}</td>
+            </tr>
+            <tr>
+              <td>Modo quente</td>
+              <td>${r.hotIn?r.hotIn+'°C':'—'}</td>
+              <td>${r.hotOut?r.hotOut+'°C':'—'}</td>
+              <td style="font-weight:700">${r.hotIn&&r.hotOut?Math.abs(r.hotIn-r.hotOut).toFixed(1)+'°C':'—'}</td>
+            </tr>
+          </tbody>
+        </table>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de temperatura</div>
         ${r.photos.cold?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo frio</div><img src="${r.photos.cold}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
         ${r.photos.hot?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo quente</div><img src="${r.photos.hot}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
@@ -2785,7 +2784,8 @@ window.preBuildPdf = async function(){
       curY += dh + 3;
     }
 
-    // Render ONE photo block (its wrapping div with label+img) on its OWN full page
+    // Render ONE photo block (its wrapping div with label+img), maximizing its size
+    // but keeping it with a title/label that was just placed above it on the same page
     async function addPhotoBlock(elm){
       if(!elm || elm.offsetHeight < 2) return;
       const c = await html2canvas(elm, {
@@ -2794,8 +2794,14 @@ window.preBuildPdf = async function(){
       });
       if(!c || !c.width || !c.height) return;
 
-      // Force a fresh page so the photo gets maximum available space
-      if(!firstPage){ pdf.addPage(); curY = margin; }
+      // Only force a new page if there's little space left on the current page
+      // (avoids leaving a lone title on a page while its photo jumps to the next)
+      const minSpace = 70; // mm — below this, a photo would be too small to be useful
+      const spaceLeft = pageH - margin - curY;
+      if(!firstPage && spaceLeft < minSpace){
+        pdf.addPage();
+        curY = margin;
+      }
       firstPage = false;
 
       const availH = pageH - margin - curY;

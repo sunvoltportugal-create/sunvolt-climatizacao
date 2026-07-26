@@ -2753,18 +2753,10 @@ window.preBuildPdf = async function(){
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-    // Reload all images with CORS so canvas is not tainted
+    // Wait for all images to load (no CORS trickery — html2canvas handles that itself)
     const allImgs = Array.from(el.querySelectorAll('img'));
-    await Promise.all(allImgs.map(img => new Promise(resolve => {
-      if(img.complete && img.naturalWidth > 0 && img.crossOrigin === 'anonymous'){ resolve(); return; }
-      img.crossOrigin = 'anonymous';
-      img.onload = resolve;
-      img.onerror = resolve;
-      setTimeout(resolve, 10000);
-      const src = img.src;
-      img.src = '';
-      img.src = src;
-    })));
+    await Promise.all(allImgs.map(img => img.complete ? Promise.resolve() :
+      new Promise(r => { img.onload=r; img.onerror=r; setTimeout(r,10000); })));
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -2772,84 +2764,65 @@ window.preBuildPdf = async function(){
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const contentW = pageW - margin * 2;
-    const maxH = pageH - margin * 2;
     let curY = margin;
     let firstPage = true;
 
-    // Render an HTML element (text/tables) via html2canvas — proportional, never distorted
-    async function addEl(elm, scale){
-      if(!elm || elm.offsetHeight < 2) return 0;
+    // Render a plain (no-photo) block: proportional, never distorted, page-break if needed
+    async function addBlock(elm, scale){
+      if(!elm || elm.offsetHeight < 2) return;
       const c = await html2canvas(elm, {
         scale: scale||2, useCORS: true, allowTaint: true,
         backgroundColor: '#ffffff', logging: false, imageTimeout: 15000
       });
-      if(!c || !c.width || !c.height) return 0;
+      if(!c || !c.width || !c.height) return;
       let dw = contentW;
       let dh = (c.height * contentW) / c.width;
-      if(dh > maxH){ const r = maxH / dh; dh = maxH; dw = contentW * r; }
+      const maxH = pageH - margin * 2;
+      if(dh > maxH){ const ratio = maxH/dh; dh = maxH; dw = contentW*ratio; }
       if(!firstPage && curY + dh > pageH - margin){ pdf.addPage(); curY = margin; }
       firstPage = false;
-      pdf.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', margin + (contentW - dw)/2, curY, dw, dh, '', 'FAST');
+      pdf.addImage(c.toDataURL('image/jpeg',0.95), 'JPEG', margin+(contentW-dw)/2, curY, dw, dh, '', 'FAST');
       curY += dh + 3;
-      return dh;
     }
 
-    // Embed a photo DIRECTLY from its natural pixels — mathematically impossible to distort
-    async function addPhoto(img, labelEl){
-      if(!img || !img.naturalWidth || !img.naturalHeight) return;
-      const iw = img.naturalWidth, ih = img.naturalHeight;
-      let data = null;
-      try{
-        const cv = document.createElement('canvas');
-        cv.width = iw; cv.height = ih;
-        cv.getContext('2d').drawImage(img, 0, 0);
-        data = cv.toDataURL('image/jpeg', 0.92);
-      }catch(e){ console.error('Photo canvas tainted:', e); }
-      if(!data){ return; }
+    // Render ONE photo block (its wrapping div with label+img) on its OWN full page
+    async function addPhotoBlock(elm){
+      if(!elm || elm.offsetHeight < 2) return;
+      const c = await html2canvas(elm, {
+        scale: 3, useCORS: true, allowTaint: true,
+        backgroundColor: '#ffffff', logging: false, imageTimeout: 15000
+      });
+      if(!c || !c.width || !c.height) return;
 
-      // Always start photo on a fresh page so it gets maximum size
+      // Force a fresh page so the photo gets maximum available space
       if(!firstPage){ pdf.addPage(); curY = margin; }
       firstPage = false;
 
-      // Render label first (if any)
-      let labelH = 0;
-      if(labelEl && labelEl.offsetHeight > 2){
-        const lc = await html2canvas(labelEl, {scale:2, backgroundColor:'#ffffff', logging:false});
-        if(lc && lc.width){
-          labelH = (lc.height * contentW) / lc.width;
-          pdf.addImage(lc.toDataURL('image/jpeg', 0.95), 'JPEG', margin, curY, contentW, labelH, '', 'FAST');
-          curY += labelH + 2;
-        }
-      }
-
-      // Photo fills all remaining space on this page, keeping natural aspect ratio
       const availH = pageH - margin - curY;
       let dw = contentW;
-      let dh = dw * ih / iw;
-      if(dh > availH){ dh = availH; dw = dh * iw / ih; }
-
-      pdf.addImage(data, 'JPEG', margin + (contentW - dw)/2, curY, dw, dh, '', 'FAST');
+      let dh = (c.height * contentW) / c.width;
+      if(dh > availH){ const ratio = availH/dh; dh = availH; dw = contentW*ratio; }
+      pdf.addImage(c.toDataURL('image/jpeg',0.96), 'JPEG', margin+(contentW-dw)/2, curY, dw, dh, '', 'FAST');
       curY += dh + 4;
     }
 
-    // Walk sections: text sections render whole; photo sections render label+photo pairs
+    // Walk the report: sections without photos render as whole blocks;
+    // sections with photos get split so each photo+label gets its own page
     for(const child of Array.from(el.children)){
       if(!child || child.offsetHeight < 2) continue;
-      const imgs = child.querySelectorAll('img');
-      if(imgs.length === 0){
-        await addEl(child, 2);
+      const hasImgs = child.querySelectorAll('img').length > 0;
+
+      if(!hasImgs){
+        await addBlock(child, 2);
         continue;
       }
-      // Section with photos: iterate its sub-blocks
+
       for(const sub of Array.from(child.children)){
         if(!sub || sub.offsetHeight < 2) continue;
-        const subImg = sub.querySelector('img');
-        if(!subImg){
-          // Section title or text
-          await addEl(sub, 2);
+        if(sub.querySelector('img')){
+          await addPhotoBlock(sub);
         } else {
-          const label = Array.from(sub.children).find(n => n.tagName !== 'IMG');
-          await addPhoto(subImg, label);
+          await addBlock(sub, 2);
         }
       }
     }

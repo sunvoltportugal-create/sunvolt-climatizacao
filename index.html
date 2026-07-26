@@ -2472,11 +2472,9 @@ function showReportPdf(o, r){
       </div>
 
       ${r.leakPhotos&&r.leakPhotos.length?`
-      <div style="margin-bottom:14px">
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;font-weight:600">📸 Fotos — Deteção de fugas</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-          ${r.leakPhotos.map(url=>`<img src="${url}" style="width:100%;border-radius:6px;object-fit:cover;aspect-ratio:1"/>`).join('')}
-        </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">📸 Fotos — Deteção de fugas</div>
+        ${r.leakPhotos.map((url,i)=>`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🔍 Foto ${i+1}</div><img src="${url}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`).join('')}
       </div>`:''}
 
       ${r.observations?`<div style="margin-bottom:14px;padding:10px;background:#f5f7fa;border-radius:8px;font-size:12px">
@@ -2513,7 +2511,10 @@ function showReportPdf(o, r){
 
       ${r.photos && (r.photos.cold||r.photos.hot)?`
       <div style="margin-bottom:8px">
-        <table class="pdf-table" style="margin-bottom:10px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de temperatura</div>
+        ${r.photos.cold?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo frio</div><img src="${r.photos.cold}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        ${r.photos.hot?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo quente</div><img src="${r.photos.hot}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
+        <table class="pdf-table" style="margin-top:6px">
           <thead><tr><th>Teste de temperatura</th><th>Insuflação</th><th>Retorno</th><th>Δ Temp</th></tr></thead>
           <tbody>
             <tr>
@@ -2530,9 +2531,6 @@ function showReportPdf(o, r){
             </tr>
           </tbody>
         </table>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:10px;font-weight:600">Registo fotográfico — Testes de temperatura</div>
-        ${r.photos.cold?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo frio</div><img src="${r.photos.cold}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
-        ${r.photos.hot?`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:#444;margin-bottom:5px">🌡️ Termómetro modo quente</div><img src="${r.photos.hot}" style="max-height:75vh;width:auto;max-width:100%;display:block;border-radius:6px;margin:0 auto"/></div>`:''}
       </div>`:''}
 
       <div style="margin-top:16px;padding:12px;background:#e8f5ee;border-radius:8px;font-size:12px;text-align:center;color:#1a7a50;font-weight:600">
@@ -2784,19 +2782,36 @@ window.preBuildPdf = async function(){
       curY += dh + 3;
     }
 
-    // Render ONE photo block (its wrapping div with label+img), maximizing its size
-    // but keeping it with a title/label that was just placed above it on the same page
+    // Render ONE photo block: label rendered separately (fixed, consistent size)
+    // and photo rendered separately (maximized, using its own natural proportions).
+    // This guarantees every title/label looks the same size regardless of the photo's aspect ratio.
     async function addPhotoBlock(elm){
       if(!elm || elm.offsetHeight < 2) return;
-      const c = await html2canvas(elm, {
+      const imgEl = elm.querySelector('img');
+      if(!imgEl) return;
+      const labelEl = Array.from(elm.children).find(n => n.tagName !== 'IMG');
+
+      // Render label alone (consistent height across all sections)
+      let labelH = 0, labelData = null;
+      if(labelEl && labelEl.offsetHeight > 2){
+        const lc = await html2canvas(labelEl, {
+          scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false
+        });
+        if(lc && lc.width){
+          labelH = (lc.height * contentW) / lc.width;
+          labelData = lc.toDataURL('image/jpeg', 0.95);
+        }
+      }
+
+      // Render the photo alone — its size depends only on its own natural proportions
+      const pc = await html2canvas(imgEl, {
         scale: 3, useCORS: true, allowTaint: true,
         backgroundColor: '#ffffff', logging: false, imageTimeout: 15000
       });
-      if(!c || !c.width || !c.height) return;
+      if(!pc || !pc.width || !pc.height) return;
 
       // Only force a new page if there's little space left on the current page
-      // (avoids leaving a lone title on a page while its photo jumps to the next)
-      const minSpace = 70; // mm — below this, a photo would be too small to be useful
+      const minSpace = 70; // mm
       const spaceLeft = pageH - margin - curY;
       if(!firstPage && spaceLeft < minSpace){
         pdf.addPage();
@@ -2804,11 +2819,16 @@ window.preBuildPdf = async function(){
       }
       firstPage = false;
 
+      if(labelData){
+        pdf.addImage(labelData, 'JPEG', margin, curY, contentW, labelH, '', 'FAST');
+        curY += labelH + 2;
+      }
+
       const availH = pageH - margin - curY;
       let dw = contentW;
-      let dh = (c.height * contentW) / c.width;
+      let dh = (pc.height * contentW) / pc.width;
       if(dh > availH){ const ratio = availH/dh; dh = availH; dw = contentW*ratio; }
-      pdf.addImage(c.toDataURL('image/jpeg',0.96), 'JPEG', margin+(contentW-dw)/2, curY, dw, dh, '', 'FAST');
+      pdf.addImage(pc.toDataURL('image/jpeg',0.96), 'JPEG', margin+(contentW-dw)/2, curY, dw, dh, '', 'FAST');
       curY += dh + 4;
     }
 

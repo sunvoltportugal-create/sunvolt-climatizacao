@@ -2569,6 +2569,7 @@ function showReportPdf(o, r){
 
 // ---- PDF ----
 window.showPdf=function(id, mode='client'){
+  try{
   const o=orcamentos.find(x=>x.id===id);if(!o)return;
   currentPdfType='orc';
   currentPdfClient=o.client;
@@ -2665,8 +2666,8 @@ window.showPdf=function(id, mode='client'){
       (o.gasAdded&&o.gasPrice?(o.gasPrice||0)*iva:0);
 
     const internalRows=[
-      ...(allAcUnits2.length?[
-        ...allAcUnits2.map(u=>`<tr style="background:#fff8e8">
+      ...(allAcUnits.length?[
+        ...allAcUnits.map(u=>`<tr style="background:#fff8e8">
           <td><strong>${esc(u.brand)} ${esc(u.model)}</strong><br/><span style="font-size:10px;color:#888">${u.btu} BTU · ${u.type||''} · Classe ${u.energyClass||''} · Fatura fornecedor</span></td>
           <td style="text-align:center">${u.qty||1}</td><td style="text-align:center">un</td>
           <td style="text-align:right;color:#888">${((u.buyPrice||0)*(u.qty||1)).toFixed(2)} €</td>
@@ -2730,6 +2731,10 @@ window.showPdf=function(id, mode='client'){
   document.getElementById('pdfPreviewArea').innerHTML=content;
   openModal('pdfModal');
   setTimeout(()=>preBuildPdf(), 500);
+  }catch(e){
+    console.error('showPdf error:', e);
+    showToast('Erro ao gerar o PDF — tenta novamente');
+  }
 };
 
 window.printPdf=function(){
@@ -2769,6 +2774,31 @@ window.preBuildPdf = async function(){
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const contentW = pageW - margin * 2;
+
+    // FAST PATH: content with no photos (orçamentos) — capture the whole thing in
+    // ONE shot so it looks EXACTLY like the on-screen preview, no section-splitting.
+    if(allImgs.length === 0){
+      const full = await html2canvas(el, {
+        scale: 2.6, useCORS: true, allowTaint: true,
+        backgroundColor: '#ffffff', logging: false, imageTimeout: 15000
+      });
+      const imgH = (full.height * contentW) / full.width;
+      const data = full.toDataURL('image/jpeg', 0.95);
+      const pageContentH = pageH - margin * 2;
+      let y = 0, first = true;
+      while(y < imgH){
+        if(!first) pdf.addPage();
+        first = false;
+        pdf.addImage(data, 'JPEG', margin, margin - y, contentW, imgH, '', 'FAST');
+        y += pageContentH;
+      }
+      cachedPdfBlob = pdf.output('blob');
+      const type0 = currentPdfType==='report'?'Relatorio_instalacao':'Orcamento';
+      cachedPdfName = `${type0}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
+      showToast('PDF pronto ✓');
+      return;
+    }
+
     let curY = margin;
     let firstPage = true;
 

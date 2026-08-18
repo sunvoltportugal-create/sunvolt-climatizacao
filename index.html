@@ -1921,6 +1921,7 @@ function calcLinePrice(l){
 
 window.updateOrcLine=function(i){
   const l=orcStockLines[i];
+  let stockChanged=false;
   if(l.free){
     l.name=(document.getElementById(`osl-name-${i}`)?.value||'').trim();
     l.unit=document.getElementById(`osl-unit-${i}`)?.value||'un';
@@ -1928,18 +1929,25 @@ window.updateOrcLine=function(i){
     const newId=document.getElementById(`osl-id-${i}`)?.value||'';
     if(newId!==l.stockId){
       l.stockId=newId;
-      // Reset custom price when stock item changes
+      // Reset custom price when stock item changes — pick up the new item's stock price
       delete l.customPrice;
+      stockChanged=true;
     }
   }
   l.qty=parseFloat(document.getElementById(`osl-qty-${i}`)?.value)||1;
-  // Read custom unit price
-  const unitPriceEl=document.getElementById(`osl-unitprice-${i}`);
-  if(unitPriceEl) l.customPrice=parseFloat(unitPriceEl.value)||0;
-  if(l.free) l.price=l.customPrice||0;
-  const total=(l.customPrice||0)*l.qty;
-  const priceEl=document.getElementById(`osl-price-${i}`);
-  if(priceEl) priceEl.textContent=total.toFixed(2)+' €';
+
+  if(stockChanged){
+    // Re-render so the price field shows the newly selected material's stock price
+    renderOrcStockLines();
+  } else {
+    // Read custom unit price (user typed manually)
+    const unitPriceEl=document.getElementById(`osl-unitprice-${i}`);
+    if(unitPriceEl) l.customPrice=parseFloat(unitPriceEl.value)||0;
+    if(l.free) l.price=l.customPrice||0;
+    const total=(l.customPrice||0)*l.qty;
+    const priceEl=document.getElementById(`osl-price-${i}`);
+    if(priceEl) priceEl.textContent=total.toFixed(2)+' €';
+  }
   calcOrcTotal();
 };
 

@@ -1054,8 +1054,8 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
     <div class="modal-actions" style="flex-wrap:wrap;gap:8px">
       <button class="modal-btn cancel" onclick="closeModal('pdfModal')" style="flex:1">Fechar</button>
       <button class="modal-btn confirm" onclick="printPdf()" style="flex:1">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Imprimir / PDF
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descarregar PDF
       </button>
     </div>
     <div style="display:none;gap:8px;margin-top:8px" id="shareButtons">
@@ -2687,8 +2687,8 @@ window.showPdf=function(id, mode='client'){
       (o.gasAdded&&o.gasPrice?(o.gasPrice||0)*iva:0);
 
     const internalRows=[
-      ...(allAcUnits2.length?[
-        ...allAcUnits2.map(u=>`<tr style="background:#fff8e8">
+      ...(allAcUnits.length?[
+        ...allAcUnits.map(u=>`<tr style="background:#fff8e8">
           <td><strong>${esc(u.brand)} ${esc(u.model)}</strong><br/><span style="font-size:10px;color:#888">${u.btu} BTU · ${u.type||''} · Classe ${u.energyClass||''} · Fatura fornecedor</span></td>
           <td style="text-align:center">${u.qty||1}</td><td style="text-align:center">un</td>
           <td style="text-align:right;color:#888">${((u.buyPrice||0)*(u.qty||1)).toFixed(2)} €</td>
@@ -2754,14 +2754,18 @@ window.showPdf=function(id, mode='client'){
   setTimeout(()=>preBuildPdf(), 500);
 };
 
-window.printPdf=function(){
-  const content=document.getElementById('pdfContent').outerHTML;
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Documento</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"/>
-  <style>body{margin:20px;font-family:'Inter',sans-serif}${document.querySelector('style').textContent}</style>
-  </head><body onload="window.print()">${content}</body></html>`);
-  w.document.close();
+window.printPdf=async function(){
+  // Downloads the clean, app-generated PDF (no browser print header/footer/URL/date)
+  if(!cachedPdfBlob){
+    showToast('A gerar PDF...');
+    await preBuildPdf();
+  }
+  if(!cachedPdfBlob){ showToast('Erro ao gerar PDF'); return; }
+  const url=URL.createObjectURL(cachedPdfBlob);
+  const a=document.createElement('a');
+  a.href=url; a.download=cachedPdfName||'documento.pdf';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 let currentPdfType = 'orc'; // 'orc' or 'report'
@@ -2791,6 +2795,42 @@ window.preBuildPdf = async function(){
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const contentW = pageW - margin * 2;
+
+    // FAST PATH: content with no photos (orçamentos) — capture the whole thing in
+    // ONE shot so it looks EXACTLY like the on-screen preview, no section-splitting,
+    // and shrink slightly to fit a single page when it's only a bit too tall.
+    if(allImgs.length === 0){
+      const full = await html2canvas(el, {
+        scale: 2.6, useCORS: true, allowTaint: true,
+        backgroundColor: '#ffffff', logging: false, imageTimeout: 15000
+      });
+      const imgH = (full.height * contentW) / full.width;
+      const data = full.toDataURL('image/jpeg', 0.95);
+      const pageContentH = pageH - margin * 2;
+
+      if(imgH <= pageContentH * 1.18){
+        // Only slightly over one page (or fits already) — shrink to fit a single page
+        const scale = Math.min(1, pageContentH / imgH);
+        const drawW = contentW * scale;
+        const drawH = imgH * scale;
+        pdf.addImage(data, 'JPEG', margin + (contentW - drawW) / 2, margin, drawW, drawH, '', 'FAST');
+      } else {
+        // Genuinely long content — paginate normally rather than shrinking illegibly
+        let y = 0, first = true;
+        while(y < imgH){
+          if(!first) pdf.addPage();
+          first = false;
+          pdf.addImage(data, 'JPEG', margin, margin - y, contentW, imgH, '', 'FAST');
+          y += pageContentH;
+        }
+      }
+      cachedPdfBlob = pdf.output('blob');
+      const type0 = currentPdfType==='report'?'Relatorio_instalacao':'Orcamento';
+      cachedPdfName = `${type0}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
+      showToast('PDF pronto ✓');
+      return;
+    }
+
     let curY = margin;
     let firstPage = true;
 

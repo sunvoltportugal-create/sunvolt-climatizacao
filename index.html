@@ -218,20 +218,22 @@ h1,h2,h3,.brand{font-family:'Space Grotesk',sans-serif}
 #pdfModal .modal-sheet{background:var(--surface)}
 .pdf-preview{background:#fff;border-radius:10px;padding:24px;color:#111;font-family:'Inter',sans-serif;font-size:12px;line-height:1.6;margin-bottom:16px}
 .pdf-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #111}
+.pdf-brand-row{display:flex;align-items:center;gap:9px}
 .pdf-brand{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#111;letter-spacing:-.5px}
 .pdf-brand span{color:#3D8EF0}
 .pdf-meta{text-align:right;font-size:11px;color:#555}
 .pdf-client{margin-bottom:16px;padding:12px;background:#f5f7fa;border-radius:8px}
 .pdf-client-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:3px}
 .pdf-client-name{font-size:14px;font-weight:600;color:#111}
-.pdf-table{width:100%;border-collapse:collapse;margin-bottom:16px}
-.pdf-table th{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;padding:6px 8px;border-bottom:1px solid #e0e0e0;text-align:left}
+.pdf-table{width:100%;border-collapse:collapse;margin-bottom:18px}
+.pdf-table th{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#888;padding:9px 12px;border-bottom:2px solid #e0e0e0;text-align:left}
 .pdf-table th:last-child{text-align:right}
-.pdf-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:top}
-.pdf-table td:last-child{text-align:right;font-weight:600;color:#111}
-.pdf-totals{padding:12px;background:#f5f7fa;border-radius:8px}
-.pdf-tot-row{display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px}
-.pdf-tot-row.final{font-size:15px;font-weight:700;color:#111;margin-bottom:0;padding-top:8px;border-top:1px solid #ddd;margin-top:6px}
+.pdf-table td{font-size:12.5px;padding:11px 12px;border-bottom:1px solid #eef0f4;color:#333;vertical-align:top}
+.pdf-table tbody tr:nth-child(even){background:#fafbfd}
+.pdf-table td:last-child{text-align:right;font-weight:600;color:#111;white-space:nowrap}
+.pdf-totals{padding:16px 18px;background:#f5f7fa;border-radius:8px}
+.pdf-tot-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#555;margin-bottom:6px;gap:16px}
+.pdf-tot-row.final{font-size:16px;font-weight:700;color:#111;margin-bottom:0;padding-top:12px;border-top:1px solid #ddd;margin-top:10px}
 .pdf-footer{font-size:10px;color:#aaa;text-align:center;margin-top:14px}
 
 /* TOAST */
@@ -2436,7 +2438,17 @@ function showReportPdf(o, r){
     <div class="pdf-preview" id="pdfContent">
       <div class="pdf-header">
         <div>
+          <div class="pdf-brand-row">
+          <svg width="30" height="30" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <g fill="#2D7DD2">
+              <path d="M 11.40,13.34 L 11.26,13.71 L 11.12,14.06 L 10.96,14.42 L 10.79,14.76 L 10.60,15.10 L 10.39,15.43 L 10.16,15.75 L 9.90,16.05 L 9.61,16.34 L 9.30,16.60 L 8.95,16.84 L 8.58,17.06 L 8.17,17.25 L 7.73,17.40 L 7.26,17.51 L 6.76,17.58 L 6.23,17.60 L 5.68,17.57 L 5.10,17.49 L 4.51,17.34 L 5.00,17.97 L 5.84,18.30 L 6.66,18.52 L 7.46,18.64 L 8.22,18.66 L 8.94,18.59 L 9.60,18.45 L 10.20,18.24 L 10.74,17.98 L 11.22,17.67 L 11.64,17.32 L 11.99,16.95 L 12.27,16.56 L 12.49,16.15 L 12.66,15.73 L 12.76,15.32 L 12.82,14.90 L 12.83,14.50 L 12.79,14.10 L 12.71,13.72 L 12.60,13.34 Z"/>
+              <path d="M 11.13,10.81 L 10.89,10.51 L 10.65,10.20 L 10.43,9.89 L 10.21,9.57 L 10.01,9.24 L 9.83,8.89 L 9.67,8.53 L 9.54,8.16 L 9.44,7.77 L 9.36,7.36 L 9.33,6.94 L 9.33,6.51 L 9.37,6.06 L 9.46,5.60 L 9.60,5.14 L 9.79,4.67 L 10.03,4.20 L 10.33,3.74 L 10.69,3.28 L 11.12,2.84 L 10.32,2.95 L 9.62,3.51 L 9.02,4.12 L 8.52,4.75 L 8.13,5.40 L 7.83,6.05 L 7.62,6.69 L 7.49,7.32 L 7.45,7.92 L 7.48,8.49 L 7.57,9.02 L 7.72,9.51 L 7.92,9.96 L 8.16,10.35 L 8.44,10.70 L 8.75,11.00 L 9.08,11.26 L 9.42,11.47 L 9.79,11.63 L 10.16,11.76 L 10.54,11.85 Z"/>
+              <path d="M 13.46,11.85 L 13.85,11.78 L 14.23,11.73 L 14.61,11.69 L 15.00,11.67 L 15.39,11.66 L 15.78,11.68 L 16.17,11.72 L 16.56,11.79 L 16.95,11.90 L 17.34,12.04 L 17.72,12.22 L 18.09,12.43 L 18.46,12.69 L 18.81,13.00 L 19.14,13.35 L 19.45,13.75 L 19.74,14.19 L 19.99,14.69 L 20.20,15.23 L 20.37,15.82 L 20.67,15.07 L 20.54,14.18 L 20.32,13.36 L 20.02,12.61 L 19.65,11.94 L 19.24,11.36 L 18.79,10.86 L 18.30,10.44 L 17.81,10.10 L 17.30,9.84 L 16.79,9.65 L 16.29,9.54 L 15.81,9.49 L 15.35,9.50 L 14.90,9.56 L 14.49,9.68 L 14.11,9.84 L 13.75,10.04 L 13.43,10.27 L 13.13,10.53 L 12.87,10.81 Z"/>
+            </g>
+            <circle cx="12" cy="12" r="1.3" fill="#2D7DD2"/>
+          </svg>
           <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
+        </div>
           <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira</div>
           <div style="font-size:11px;color:#777;margin-top:2px">📍 Covilhã / Aveiro</div>
           <div style="font-size:11px;color:#777;margin-top:1px">📞 968 184 169</div>
@@ -2569,7 +2581,6 @@ function showReportPdf(o, r){
 
 // ---- PDF ----
 window.showPdf=function(id, mode='client'){
-  try{
   const o=orcamentos.find(x=>x.id===id);if(!o)return;
   currentPdfType='orc';
   currentPdfClient=o.client;
@@ -2579,7 +2590,17 @@ window.showPdf=function(id, mode='client'){
   const header=`
     <div class="pdf-header">
       <div>
-        <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
+        <div class="pdf-brand-row">
+          <svg width="30" height="30" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <g fill="#2D7DD2">
+              <path d="M 11.40,13.34 L 11.26,13.71 L 11.12,14.06 L 10.96,14.42 L 10.79,14.76 L 10.60,15.10 L 10.39,15.43 L 10.16,15.75 L 9.90,16.05 L 9.61,16.34 L 9.30,16.60 L 8.95,16.84 L 8.58,17.06 L 8.17,17.25 L 7.73,17.40 L 7.26,17.51 L 6.76,17.58 L 6.23,17.60 L 5.68,17.57 L 5.10,17.49 L 4.51,17.34 L 5.00,17.97 L 5.84,18.30 L 6.66,18.52 L 7.46,18.64 L 8.22,18.66 L 8.94,18.59 L 9.60,18.45 L 10.20,18.24 L 10.74,17.98 L 11.22,17.67 L 11.64,17.32 L 11.99,16.95 L 12.27,16.56 L 12.49,16.15 L 12.66,15.73 L 12.76,15.32 L 12.82,14.90 L 12.83,14.50 L 12.79,14.10 L 12.71,13.72 L 12.60,13.34 Z"/>
+              <path d="M 11.13,10.81 L 10.89,10.51 L 10.65,10.20 L 10.43,9.89 L 10.21,9.57 L 10.01,9.24 L 9.83,8.89 L 9.67,8.53 L 9.54,8.16 L 9.44,7.77 L 9.36,7.36 L 9.33,6.94 L 9.33,6.51 L 9.37,6.06 L 9.46,5.60 L 9.60,5.14 L 9.79,4.67 L 10.03,4.20 L 10.33,3.74 L 10.69,3.28 L 11.12,2.84 L 10.32,2.95 L 9.62,3.51 L 9.02,4.12 L 8.52,4.75 L 8.13,5.40 L 7.83,6.05 L 7.62,6.69 L 7.49,7.32 L 7.45,7.92 L 7.48,8.49 L 7.57,9.02 L 7.72,9.51 L 7.92,9.96 L 8.16,10.35 L 8.44,10.70 L 8.75,11.00 L 9.08,11.26 L 9.42,11.47 L 9.79,11.63 L 10.16,11.76 L 10.54,11.85 Z"/>
+              <path d="M 13.46,11.85 L 13.85,11.78 L 14.23,11.73 L 14.61,11.69 L 15.00,11.67 L 15.39,11.66 L 15.78,11.68 L 16.17,11.72 L 16.56,11.79 L 16.95,11.90 L 17.34,12.04 L 17.72,12.22 L 18.09,12.43 L 18.46,12.69 L 18.81,13.00 L 19.14,13.35 L 19.45,13.75 L 19.74,14.19 L 19.99,14.69 L 20.20,15.23 L 20.37,15.82 L 20.67,15.07 L 20.54,14.18 L 20.32,13.36 L 20.02,12.61 L 19.65,11.94 L 19.24,11.36 L 18.79,10.86 L 18.30,10.44 L 17.81,10.10 L 17.30,9.84 L 16.79,9.65 L 16.29,9.54 L 15.81,9.49 L 15.35,9.50 L 14.90,9.56 L 14.49,9.68 L 14.11,9.84 L 13.75,10.04 L 13.43,10.27 L 13.13,10.53 L 12.87,10.81 Z"/>
+            </g>
+            <circle cx="12" cy="12" r="1.3" fill="#2D7DD2"/>
+          </svg>
+          <div class="pdf-brand">Sun<span>Volt</span> <span style="font-size:13px;font-weight:400;color:#777">Climatização</span></div>
+        </div>
         <div style="font-size:11px;color:#555;margin-top:4px">Bruno Sequeira</div>
         <div style="font-size:11px;color:#777;margin-top:1px">📍 Covilhã / Aveiro &nbsp;|&nbsp; 📞 968 184 169 &nbsp;|&nbsp; ✉️ sunvoltportugal@gmail.com</div>
       </div>
@@ -2666,8 +2687,8 @@ window.showPdf=function(id, mode='client'){
       (o.gasAdded&&o.gasPrice?(o.gasPrice||0)*iva:0);
 
     const internalRows=[
-      ...(allAcUnits.length?[
-        ...allAcUnits.map(u=>`<tr style="background:#fff8e8">
+      ...(allAcUnits2.length?[
+        ...allAcUnits2.map(u=>`<tr style="background:#fff8e8">
           <td><strong>${esc(u.brand)} ${esc(u.model)}</strong><br/><span style="font-size:10px;color:#888">${u.btu} BTU · ${u.type||''} · Classe ${u.energyClass||''} · Fatura fornecedor</span></td>
           <td style="text-align:center">${u.qty||1}</td><td style="text-align:center">un</td>
           <td style="text-align:right;color:#888">${((u.buyPrice||0)*(u.qty||1)).toFixed(2)} €</td>
@@ -2731,10 +2752,6 @@ window.showPdf=function(id, mode='client'){
   document.getElementById('pdfPreviewArea').innerHTML=content;
   openModal('pdfModal');
   setTimeout(()=>preBuildPdf(), 500);
-  }catch(e){
-    console.error('showPdf error:', e);
-    showToast('Erro ao gerar o PDF — tenta novamente');
-  }
 };
 
 window.printPdf=function(){
@@ -2774,31 +2791,6 @@ window.preBuildPdf = async function(){
     const pageH = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const contentW = pageW - margin * 2;
-
-    // FAST PATH: content with no photos (orçamentos) — capture the whole thing in
-    // ONE shot so it looks EXACTLY like the on-screen preview, no section-splitting.
-    if(allImgs.length === 0){
-      const full = await html2canvas(el, {
-        scale: 2.6, useCORS: true, allowTaint: true,
-        backgroundColor: '#ffffff', logging: false, imageTimeout: 15000
-      });
-      const imgH = (full.height * contentW) / full.width;
-      const data = full.toDataURL('image/jpeg', 0.95);
-      const pageContentH = pageH - margin * 2;
-      let y = 0, first = true;
-      while(y < imgH){
-        if(!first) pdf.addPage();
-        first = false;
-        pdf.addImage(data, 'JPEG', margin, margin - y, contentW, imgH, '', 'FAST');
-        y += pageContentH;
-      }
-      cachedPdfBlob = pdf.output('blob');
-      const type0 = currentPdfType==='report'?'Relatorio_instalacao':'Orcamento';
-      cachedPdfName = `${type0}_${(currentPdfClient||'').replace(/\s/g,'_')}.pdf`;
-      showToast('PDF pronto ✓');
-      return;
-    }
-
     let curY = margin;
     let firstPage = true;
 

@@ -2772,7 +2772,7 @@ window.preBuildPdf = async function(){
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const margin = 10;
+    const margin = 14;
     const contentW = pageW - margin * 2;
 
     // FAST PATH: content with no photos (orçamentos) — capture the whole thing in
@@ -2794,13 +2794,46 @@ window.preBuildPdf = async function(){
         const drawH = imgH * scale;
         pdf.addImage(data, 'JPEG', margin + (contentW - drawW) / 2, margin, drawW, drawH, '', 'FAST');
       } else {
-        // Genuinely long content — paginate normally rather than shrinking illegibly
-        let y = 0, first = true;
-        while(y < imgH){
+        // Genuinely long content — crop the source canvas into page-sized slices,
+        // nudging each cut line to land on a blank row (gap between table rows)
+        // so text never gets sliced in half at a page break.
+        const pxPerMm = full.width / contentW;
+        const sliceHeightPx = Math.round(pageContentH * pxPerMm);
+        const searchPx = Math.round(14 * pxPerMm); // look up to 14mm back for a blank line
+        const ctx = full.getContext ? full.getContext('2d') : null;
+
+        function findSafeCutY(targetY){
+          if(!ctx || targetY >= full.height) return targetY;
+          const minY = Math.max(0, targetY - searchPx);
+          for(let y = targetY; y > minY; y--){
+            const row = ctx.getImageData(0, y, full.width, 1).data;
+            let blank = true;
+            for(let x = 0; x < row.length; x += 32){ // sample every 8th pixel (4 bytes/px)
+              if(row[x] < 242 || row[x+1] < 242 || row[x+2] < 242){ blank = false; break; }
+            }
+            if(blank) return y;
+          }
+          return targetY; // no safe line found nearby — fall back to the raw cut
+        }
+
+        let sliceY = 0, first = true;
+        while(sliceY < full.height){
+          let target = Math.min(sliceY + sliceHeightPx, full.height);
+          if(target < full.height){
+            const safe = findSafeCutY(target);
+            if(safe > sliceY) target = safe;
+          }
+          const thisSliceH = target - sliceY;
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = full.width;
+          sliceCanvas.height = thisSliceH;
+          sliceCanvas.getContext('2d').drawImage(full, 0, sliceY, full.width, thisSliceH, 0, 0, full.width, thisSliceH);
+          const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+          const sliceHmm = thisSliceH / pxPerMm;
           if(!first) pdf.addPage();
           first = false;
-          pdf.addImage(data, 'JPEG', margin, margin - y, contentW, imgH, '', 'FAST');
-          y += pageContentH;
+          pdf.addImage(sliceData, 'JPEG', margin, margin, contentW, sliceHmm, '', 'FAST');
+          sliceY = target;
         }
       }
       cachedPdfBlob = pdf.output('blob');

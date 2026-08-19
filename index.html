@@ -2815,13 +2815,25 @@ window.preBuildPdf = async function(){
         const drawH = imgH * scale;
         pdf.addImage(data, 'JPEG', margin + (contentW - drawW) / 2, margin, drawW, drawH, '', 'FAST');
       } else {
-        // Genuinely long content — paginate normally rather than shrinking illegibly
-        let y = 0, first = true;
-        while(y < imgH){
+        // Genuinely long content — crop the source canvas into exact page-sized slices.
+        // (jsPDF only clips images to the page edge, not to our margins, so repositioning
+        // the SAME full image with a negative offset bleeds ~margin worth of content into
+        // the next page and duplicates it — cropping the canvas avoids that entirely.)
+        const pxPerMm = full.width / contentW;
+        const sliceHeightPx = Math.round(pageContentH * pxPerMm);
+        let sliceY = 0, first = true;
+        while(sliceY < full.height){
+          const thisSliceH = Math.min(sliceHeightPx, full.height - sliceY);
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = full.width;
+          sliceCanvas.height = thisSliceH;
+          sliceCanvas.getContext('2d').drawImage(full, 0, sliceY, full.width, thisSliceH, 0, 0, full.width, thisSliceH);
+          const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+          const sliceHmm = thisSliceH / pxPerMm;
           if(!first) pdf.addPage();
           first = false;
-          pdf.addImage(data, 'JPEG', margin, margin - y, contentW, imgH, '', 'FAST');
-          y += pageContentH;
+          pdf.addImage(sliceData, 'JPEG', margin, margin, contentW, sliceHmm, '', 'FAST');
+          sliceY += thisSliceH;
         }
       }
       cachedPdfBlob = pdf.output('blob');
